@@ -6,7 +6,7 @@ import PeopleIcon from '@mui/icons-material/People';
 import MenuIcon from '@mui/icons-material/Menu';
 import Categories from './components/Categories';
 import SubCategories from './components/SubCategories';
-import ServiceProviders from './components/ServiceProviders';
+import { ServiceProvidersPage } from './features/service-providers/pages/ServiceProvidersPage';
 
 const drawerWidth = 240;
 
@@ -124,7 +124,7 @@ function App() {
             />
           )}
           {selectedSection === 2 && (
-            <ServiceProviders
+            <ServiceProvidersPage
               subCategoryId={selectedSubCategoryId || ''}
               onBack={() => setSelectedSection(1)}
             />

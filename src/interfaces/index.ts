@@ -14,12 +14,18 @@ export interface ISubCategory {
     serviceProvider?: string[]; // ObjectId as string
 }
 
+export interface IImageUrl {
+    url: string;
+    public_id: string;
+    _id: string;
+}
+
 // Service Provider
 export interface IServiceProvider {
     _id?: string;
     name: string;
     bio: string;
-    imagesUrl?: string[];
+    imagesUrl?: IImageUrl[];
     workingDays: string[];
     workingHours?: string[];
     closingHours?: string[];
