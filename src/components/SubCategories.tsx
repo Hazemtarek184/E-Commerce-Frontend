@@ -56,6 +56,7 @@ const SubCategories: React.FC<Props> = ({ mainCategoryId, onSelectSubCategory, o
     const [arabicName, setArabicName] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [filteredSubCategories, setFilteredSubCategories] = useState<ISubCategory[]>([]);
+    const [dialogSelectedCategoryId, setDialogSelectedCategoryId] = useState('');
 
     // Fetch all categories for dropdown
     useEffect(() => {
@@ -85,6 +86,10 @@ const SubCategories: React.FC<Props> = ({ mainCategoryId, onSelectSubCategory, o
     // Fetch sub-categories when selectedCategoryId changes
     useEffect(() => {
         if (selectedCategoryId) fetchSubCategories(selectedCategoryId);
+        // Update dialog selection defaults when page selection changes
+        if (!dialogOpen) {
+            setDialogSelectedCategoryId(selectedCategoryId || '');
+        }
     }, [selectedCategoryId]);
 
     // Search functionality
@@ -125,6 +130,9 @@ const SubCategories: React.FC<Props> = ({ mainCategoryId, onSelectSubCategory, o
         setEditSubCategory(subCategory || null);
         setEnglishName(subCategory?.englishName || '');
         setArabicName(subCategory?.arabicName || '');
+        // If editing, we assume it belongs to the currently viewed category (since we don't have parent ID in object)
+        // If creating, we default to currently viewed category, or the first available if none selected.
+        setDialogSelectedCategoryId(selectedCategoryId || categories[0]?._id || '');
         setDialogOpen(true);
     };
 
@@ -150,7 +158,13 @@ const SubCategories: React.FC<Props> = ({ mainCategoryId, onSelectSubCategory, o
                 return;
             }
 
+            if (!dialogSelectedCategoryId) {
+                setError('Category is required');
+                return;
+            }
+
             if (editSubCategory && editSubCategory._id) {
+                // Update currently only supports name changes based on API signature.
                 const response = await updateSubCategory(editSubCategory._id, { englishName, arabicName });
                 if (response.data.success) {
                     fetchSubCategories(selectedCategoryId);
@@ -159,9 +173,13 @@ const SubCategories: React.FC<Props> = ({ mainCategoryId, onSelectSubCategory, o
                     setError(response.data.message || 'Failed to update sub-category');
                 }
             } else {
-                const response = await createSubCategory(selectedCategoryId, { englishName, arabicName });
+                // Create with the selected category from the dialog
+                const response = await createSubCategory(dialogSelectedCategoryId, { englishName, arabicName });
                 if (response.data.success) {
-                    fetchSubCategories(selectedCategoryId);
+                    // If we added to the CURRENTLY viewed category, refresh.
+                    if (dialogSelectedCategoryId === selectedCategoryId) {
+                        fetchSubCategories(selectedCategoryId);
+                    }
                     handleCloseDialog();
                 } else {
                     setError(response.data.message || 'Failed to create sub-category');
@@ -572,6 +590,22 @@ const SubCategories: React.FC<Props> = ({ mainCategoryId, onSelectSubCategory, o
                 </DialogTitle>
                 <DialogContent>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+                        <FormControl fullWidth required>
+                            <InputLabel id="dialog-category-label">Category</InputLabel>
+                            <Select
+                                labelId="dialog-category-label"
+                                value={dialogSelectedCategoryId}
+                                label="Category"
+                                onChange={(e) => setDialogSelectedCategoryId(e.target.value)}
+                                disabled={!!editSubCategory} // Disable when editing
+                            >
+                                {categories.map(cat => (
+                                    <MenuItem key={cat._id} value={cat._id}>
+                                        {cat.englishName}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
                         <TextField
                             label="English Name"
                             value={englishName}
@@ -593,7 +627,7 @@ const SubCategories: React.FC<Props> = ({ mainCategoryId, onSelectSubCategory, o
                     <Button
                         onClick={handleSave}
                         variant="contained"
-                        disabled={loading || !englishName.trim() || !arabicName.trim()}
+                        disabled={loading || !englishName.trim() || !arabicName.trim() || !dialogSelectedCategoryId}
                     >
                         {editSubCategory ? 'Update' : 'Add'}
                     </Button>

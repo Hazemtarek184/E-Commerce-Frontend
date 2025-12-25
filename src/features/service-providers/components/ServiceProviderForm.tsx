@@ -28,14 +28,24 @@ import type {
 } from "../schemas";
 import type { IServiceProvider } from "../../../interfaces";
 
-interface ServiceProviderFormProps {
-  onSubmit: (
-    data: CreateServiceProviderInput | UpdateServiceProviderInput
-  ) => void;
-  defaultValues?: Partial<IServiceProvider>;
-  isEdit?: boolean;
+interface ServiceProviderFormBaseProps {
   isLoading?: boolean;
+  defaultValues?: Partial<IServiceProvider>;
 }
+
+interface CreateServiceProviderFormProps extends ServiceProviderFormBaseProps {
+  isEdit?: false;
+  onSubmit: (data: CreateServiceProviderInput) => void;
+}
+
+interface UpdateServiceProviderFormProps extends ServiceProviderFormBaseProps {
+  isEdit: true;
+  onSubmit: (data: UpdateServiceProviderInput) => void;
+}
+
+type ServiceProviderFormProps =
+  | CreateServiceProviderFormProps
+  | UpdateServiceProviderFormProps;
 
 const DAYS_OF_WEEK = [
   "Monday",
@@ -88,8 +98,8 @@ export const ServiceProviderForm: React.FC<ServiceProviderFormProps> = ({
         typeof contact.canCall === "boolean"
           ? contact.canCall
           : contact.canCall === undefined || contact.canCall === null
-          ? true
-          : contact.canCall === "true" || contact.canCall === "yes",
+            ? true
+            : contact.canCall === "true" || contact.canCall === "yes",
     }));
   };
 

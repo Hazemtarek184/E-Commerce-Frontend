@@ -863,36 +863,36 @@ const ServiceProviders: React.FC<Props> = ({ subCategoryId, onBack }) => {
                             />
                             <TextField
                                 label="Images URL (comma separated)"
-                                value={formData.imagesUrl?.join(',') || ''}
-                                onChange={(e) => setFormData({ ...formData, imagesUrl: e.target.value.split(',').map((url) => url.trim()).filter(Boolean) })}
+                                value={formData.imagesUrl?.map(img => img.url).join(',') || ''}
+                                onChange={(e) => setFormData({ ...formData, imagesUrl: e.target.value.split(',').map((url) => ({ url: url.trim(), public_id: '', _id: '' })).filter((img) => !!img.url) })}
                                 fullWidth
                                 required
                             />
                             <TextField
                                 label="Working Days (comma separated)"
                                 value={formData.workingDays?.join(',') || ''}
-                                onChange={(e) => setFormData({ ...formData, workingDays: e.target.value.split(',').map((d) => d.trim()).filter(Boolean) })}
+                                onChange={(e) => setFormData({ ...formData, workingDays: e.target.value.split(',').map((d) => d.trim()).filter((d) => !!d) })}
                                 fullWidth
                                 required
                             />
                             <TextField
                                 label="Working Hours (comma separated)"
                                 value={formData.workingHours?.join(',') || ''}
-                                onChange={(e) => setFormData({ ...formData, workingHours: e.target.value.split(',').map((h) => h.trim()).filter(Boolean) })}
+                                onChange={(e) => setFormData({ ...formData, workingHours: e.target.value.split(',').map((h) => h.trim()).filter((h) => !!h) })}
                                 fullWidth
                                 required
                             />
                             <TextField
                                 label="Closing Hours (comma separated)"
                                 value={formData.closingHours?.join(',') || ''}
-                                onChange={(e) => setFormData({ ...formData, closingHours: e.target.value.split(',').map((h) => h.trim()).filter(Boolean) })}
+                                onChange={(e) => setFormData({ ...formData, closingHours: e.target.value.split(',').map((h) => h.trim()).filter((h) => !!h) })}
                                 fullWidth
                                 required
                             />
                             <TextField
                                 label="Location Links (comma separated)"
                                 value={formData.locationLinks?.join(',') || ''}
-                                onChange={(e) => setFormData({ ...formData, locationLinks: e.target.value.split(',').map((l) => l.trim()).filter(Boolean) })}
+                                onChange={(e) => setFormData({ ...formData, locationLinks: e.target.value.split(',').map((l) => l.trim()).filter((l) => !!l) })}
                                 fullWidth
                                 required
                             />

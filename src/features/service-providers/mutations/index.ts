@@ -9,15 +9,15 @@ import type {
   UpdateServiceProviderInput,
 } from "../schemas";
 
-export const useCreateServiceProvider = (subCategoryId: string) => {
+export const useCreateServiceProvider = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateServiceProviderInput) =>
+    mutationFn: ({ subCategoryId, data }: { subCategoryId: string; data: CreateServiceProviderInput }) =>
       createServiceProvider(subCategoryId, data),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ["service-providers", subCategoryId],
+        queryKey: ["service-providers", variables.subCategoryId],
       });
     },
   });

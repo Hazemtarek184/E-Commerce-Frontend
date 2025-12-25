@@ -100,9 +100,7 @@ function App() {
         sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${drawerWidth}px)` } }}
       >
         <Toolbar />
-        <Typography variant="h4" gutterBottom>
-          {sections[selectedSection].label}
-        </Typography>
+
         <Box>
           {selectedSection === 0 && (
             <Categories
@@ -126,6 +124,7 @@ function App() {
           {selectedSection === 2 && (
             <ServiceProvidersPage
               subCategoryId={selectedSubCategoryId || ''}
+              mainCategoryId={selectedCategoryId || undefined}
               onBack={() => setSelectedSection(1)}
             />
           )}

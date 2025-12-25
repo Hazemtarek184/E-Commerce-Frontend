@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -13,26 +13,34 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PersonIcon from '@mui/icons-material/Person';
+import FilterListIcon from '@mui/icons-material/FilterList';
 import { useServiceProviders } from '../queries';
 import { useDeleteServiceProvider } from '../mutations';
 import { ServiceProviderList } from '../components/ServiceProviderList';
 import { CreateServiceProviderModal } from '../components/CreateServiceProviderModal';
 import { UpdateServiceProviderModal } from '../components/UpdateServiceProviderModal';
-import type { IServiceProvider } from '../../../interfaces';
+import type { IServiceProvider, IMainCategory, ISubCategory } from '../../../interfaces';
+import { getCategories, getSubCategories } from '../../../api';
 
 interface ServiceProvidersPageProps {
   subCategoryId: string;
   onBack: () => void;
+  mainCategoryId?: string;
 }
 
 export const ServiceProvidersPage: React.FC<ServiceProvidersPageProps> = ({
-  subCategoryId,
+  subCategoryId: initialSubCategoryId,
   onBack,
+  mainCategoryId: initialMainCategoryId,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -41,8 +49,56 @@ export const ServiceProvidersPage: React.FC<ServiceProvidersPageProps> = ({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [providerToDelete, setProviderToDelete] = useState<string | null>(null);
 
-  const { data, isLoading, error } = useServiceProviders(subCategoryId);
-  const deleteMutation = useDeleteServiceProvider(subCategoryId);
+  // Navigation State
+  const [currentCategoryId, setCurrentCategoryId] = useState<string>(initialMainCategoryId || '');
+  const [currentSubCategoryId, setCurrentSubCategoryId] = useState<string>(initialSubCategoryId);
+  const [categories, setCategories] = useState<IMainCategory[]>([]);
+  const [subCategories, setSubCategories] = useState<ISubCategory[]>([]);
+
+  // Fetch Categories
+  useEffect(() => {
+    const fetchCats = async () => {
+      try {
+        const res = await getCategories();
+        if (res.data?.success && Array.isArray(res.data.data?.categories)) {
+          setCategories(res.data.data.categories);
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+    fetchCats();
+  }, []);
+
+  // Fetch SubCategories when Category changes
+  useEffect(() => {
+    const fetchSubCats = async () => {
+      if (!currentCategoryId) {
+        setSubCategories([]);
+        return;
+      }
+      try {
+        const res = await getSubCategories(currentCategoryId);
+        if (res.data?.success && Array.isArray(res.data.data?.subCategories)) {
+          setSubCategories(res.data.data.subCategories);
+        }
+      } catch (error) {
+        console.error('Error fetching sub-categories:', error);
+        setSubCategories([]);
+      }
+    };
+    fetchSubCats();
+  }, [currentCategoryId]);
+
+  // Update logic when props change (if user navigates from sidebar while on this page)
+  useEffect(() => {
+    if (initialMainCategoryId) setCurrentCategoryId(initialMainCategoryId);
+    if (initialSubCategoryId) setCurrentSubCategoryId(initialSubCategoryId);
+  }, [initialMainCategoryId, initialSubCategoryId]);
+
+
+  const { data, isLoading, error } = useServiceProviders(currentSubCategoryId);
+  const deleteMutation = useDeleteServiceProvider(currentSubCategoryId);
 
   const serviceProviders = data?.data?.serviceProviders || [];
   const filteredProviders = serviceProviders.filter(
@@ -161,32 +217,68 @@ export const ServiceProvidersPage: React.FC<ServiceProvidersPageProps> = ({
           </Paper>
         )}
 
+        {/* Filters Section */}
         <Paper elevation={1} sx={{ p: 3, mb: 4, borderRadius: 3, backgroundColor: alpha('#f5f5f5', 0.5) }}>
-          <TextField
-            fullWidth
-            placeholder="Search providers by name or bio..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon color="action" />
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 3,
-                backgroundColor: alpha('#f5f5f5', 0.5),
-                '&:hover': {
-                  backgroundColor: alpha('#f5f5f5', 0.8),
-                },
-                '&.Mui-focused': {
+          <Box display="flex" flexDirection="column" gap={3}>
+            <Box display="flex" gap={2} alignItems="center">
+              <FilterListIcon color="action" />
+              <Typography variant="h6" fontWeight="600">Filters</Typography>
+            </Box>
+            <Box display="flex" gap={2} flexWrap="wrap">
+              <FormControl sx={{ minWidth: 200, flex: 1 }}>
+                <InputLabel>Category</InputLabel>
+                <Select
+                  value={currentCategoryId}
+                  label="Category"
+                  onChange={(e) => {
+                    setCurrentCategoryId(e.target.value);
+                    setCurrentSubCategoryId('');
+                  }}
+                  sx={{ backgroundColor: 'white' }}
+                >
+                  {categories.map((cat) => (
+                    <MenuItem key={cat._id} value={cat._id}>
+                      {cat.englishName}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl sx={{ minWidth: 200, flex: 1 }} disabled={!currentCategoryId}>
+                <InputLabel>Sub-Category</InputLabel>
+                <Select
+                  value={currentSubCategoryId}
+                  label="Sub-Category"
+                  onChange={(e) => setCurrentSubCategoryId(e.target.value)}
+                  sx={{ backgroundColor: 'white' }}
+                >
+                  {subCategories.map((sub) => (
+                    <MenuItem key={sub._id} value={sub._id}>
+                      {sub.englishName}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+            <TextField
+              fullWidth
+              placeholder="Search providers by name or bio..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon color="action" />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 3,
                   backgroundColor: 'white',
                 },
-              },
-            }}
-          />
+              }}
+            />
+          </Box>
         </Paper>
 
         {filteredProviders.length > 0 && (
@@ -238,7 +330,8 @@ export const ServiceProvidersPage: React.FC<ServiceProvidersPageProps> = ({
         <CreateServiceProviderModal
           open={createModalOpen}
           onClose={() => setCreateModalOpen(false)}
-          subCategoryId={subCategoryId}
+          subCategoryId={currentSubCategoryId}
+          mainCategoryId={currentCategoryId}
         />
 
         {selectedProvider && (
@@ -249,7 +342,7 @@ export const ServiceProvidersPage: React.FC<ServiceProvidersPageProps> = ({
               setSelectedProvider(null);
             }}
             serviceProvider={selectedProvider}
-            subCategoryId={subCategoryId}
+            subCategoryId={currentSubCategoryId}
           />
         )}
 
