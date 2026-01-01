@@ -7,6 +7,7 @@ import type {
 
 const api = axios.create({
   baseURL: "https://e-commerce-three-sigma-49.vercel.app/api",
+  // baseURL: "http://localhost:8000/api", // develpment
 });
 
 export const getServiceProvidersBySubCategory = async (
@@ -24,8 +25,10 @@ export const createServiceProvider = async (
 ) => {
   const formData = new FormData();
 
-  if (data.image) {
-    formData.append("image", data.image);
+  if (data.image && data.image.length > 0) {
+    data.image.forEach((file) => {
+      formData.append("image", file);
+    });
   }
   formData.append("name", data.name);
   formData.append("bio", data.bio);
@@ -73,69 +76,27 @@ export const updateServiceProvider = async (
   serviceProviderId: string,
   data: UpdateServiceProviderInput
 ) => {
-  const hasImage = data.image instanceof File;
-  
-  if (hasImage) {
-    const formData = new FormData();
-    
-    if (data.image) {
-      formData.append("image", data.image);
-    }
-    if (data.name) formData.append("name", data.name);
-    if (data.bio) formData.append("bio", data.bio);
-    if (data.workingDays) {
-      data.workingDays.forEach((day) => formData.append("workingDays", day));
-    }
-    if (data.workingHours) {
-      data.workingHours.forEach((hour) => formData.append("workingHours", hour));
-    }
-    if (data.closingHours) {
-      data.closingHours.forEach((hour) => formData.append("closingHours", hour));
-    }
-    if (data.phoneContacts) {
-      data.phoneContacts.forEach((contact, index) => {
-        formData.append(
-          `phoneContacts[${index}][phoneNumber]`,
-          contact.phoneNumber
-        );
-        formData.append(
-          `phoneContacts[${index}][hasWhatsApp]`,
-          String(contact.hasWhatsApp)
-        );
-        formData.append(
-          `phoneContacts[${index}][canCall]`,
-          String(contact.canCall)
-        );
-      });
-    }
-    if (data.locationLinks) {
-      data.locationLinks.forEach((link) => formData.append("locationLinks", link));
-    }
-    if (data.offers && data.offers.length > 0) {
-      data.offers.forEach((offer, index) => {
-        formData.append(`offers[${index}][name]`, offer.name);
-        formData.append(`offers[${index}][description]`, offer.description);
-        offer.imageUrl.forEach((url) =>
-          formData.append(`offers[${index}][imageUrl]`, url)
-        );
-      });
-    }
+  const formData = new FormData();
 
-    const response = await api.put<
-      IApiResponse<{ serviceProvider: IServiceProvider }>
-    >(`/service-providers/${serviceProviderId}`, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
+  // 1. Append files as usual
+  if (data.image && data.image.length > 0) {
+    data.image.forEach((file) => {
+      formData.append("image", file);
     });
-    return response.data;
-  } else {
-    const { image, ...jsonData } = data;
-    const response = await api.put<
-      IApiResponse<{ serviceProvider: IServiceProvider }>
-    >(`/service-providers/${serviceProviderId}`, jsonData);
-    return response.data;
   }
+
+  // 2. Append the REST of the data as a single JSON string
+  const { image, ...rest } = data;
+  formData.append("data", JSON.stringify(rest));
+
+  const response = await api.put<
+    IApiResponse<{ serviceProvider: IServiceProvider }>
+  >(`/service-providers/${serviceProviderId}`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return response.data;
 };
 
 export const deleteServiceProvider = async (serviceProviderId: string) => {

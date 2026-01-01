@@ -26,7 +26,7 @@ export const imageUrlSchema = z.object({
 });
 
 export const createServiceProviderSchema = z.object({
-  image: z.instanceof(File).optional(),
+  image: z.array(z.instanceof(File)).optional(),
   name: z.string().min(1, "Name is required"),
   bio: z.string().min(1, "Bio is required"),
   workingDays: z
@@ -48,7 +48,7 @@ export const createServiceProviderSchema = z.object({
 });
 
 export const updateServiceProviderSchema = z.object({
-  image: z.instanceof(File).optional(),
+  image: z.array(z.instanceof(File)).optional(),
   name: z.string().min(1, "Name is required").optional(),
   bio: z.string().min(1, "Bio is required").optional(),
   workingDays: z.array(z.string()).optional(),
@@ -57,6 +57,7 @@ export const updateServiceProviderSchema = z.object({
   phoneContacts: z.array(phoneContactSchema).optional(),
   locationLinks: z.array(z.string()).optional(),
   offers: z.array(offerSchema).optional(),
+  deletedImageIds: z.array(z.string()).optional(),
 });
 
 export type CreateServiceProviderInput = z.infer<

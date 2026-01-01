@@ -15,6 +15,7 @@ import {
   Stack,
   Paper,
   Avatar,
+  alpha,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -27,6 +28,7 @@ import type {
   UpdateServiceProviderInput,
 } from "../schemas";
 import type { IServiceProvider } from "../../../interfaces";
+import { useState } from "react";
 
 interface ServiceProviderFormBaseProps {
   isLoading?: boolean;
@@ -78,6 +80,11 @@ export const ServiceProviderForm: React.FC<ServiceProviderFormProps> = ({
   isEdit = false,
   isLoading = false,
 }) => {
+  const [deletedImageIds, setDeletedImageIds] = useState<string[]>([]);
+  const [existingImages, setExistingImages] = useState(
+    defaultValues?.imagesUrl || []
+  );
+
   const normalizePhoneContacts = (
     contacts?: Array<{
       phoneNumber: string;
@@ -195,36 +202,104 @@ export const ServiceProviderForm: React.FC<ServiceProviderFormProps> = ({
     }
   };
 
+  const handleDeleteExistingImage = (publicId: string) => {
+    setDeletedImageIds((prev) => [...prev, publicId]);
+    setExistingImages((prev) => prev.filter((img) => img.public_id !== publicId));
+  };
+
+  const handleFormSubmit = (data: any) => {
+    if (isEdit) {
+      onSubmit({ ...data, deletedImageIds });
+    } else {
+      onSubmit(data);
+    }
+  };
+
   return (
     <Box
       component="form"
-      onSubmit={handleSubmit(onSubmit as any)}
+      onSubmit={handleSubmit(handleFormSubmit)}
       sx={{ display: "flex", flexDirection: "column", gap: 3 }}
     >
       <Box>
-        {isEdit &&
-          defaultValues?.imagesUrl &&
-          defaultValues.imagesUrl.length > 0 && (
-            <Box display="flex" alignItems="center" gap={2} mb={2}>
-              <Typography variant="subtitle2">Current Image:</Typography>
-              <Avatar
-                src={defaultValues.imagesUrl[0].url}
-                sx={{ width: 64, height: 64 }}
-              />
+        {isEdit && existingImages.length > 0 && (
+          <Box mb={2}>
+            <Typography variant="subtitle2" gutterBottom>
+              Current Images:
+            </Typography>
+            <Box
+              sx={{
+                display: "flex",
+                gap: 1,
+                flexWrap: "wrap",
+              }}
+            >
+              {existingImages.map((img) => (
+                <Box
+                  key={img.public_id}
+                  sx={{
+                    position: "relative",
+                    width: 80,
+                    height: 80,
+                    borderRadius: 1,
+                    overflow: "hidden",
+                    "&:hover .delete-overlay": {
+                      opacity: 1,
+                    },
+                  }}
+                >
+                  <img
+                    src={img.url}
+                    alt="Service Provider"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
+                  />
+                  <Box
+                    className="delete-overlay"
+                    sx={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      backgroundColor: "rgba(0,0,0,0.5)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      opacity: 0,
+                      transition: "opacity 0.2s",
+                    }}
+                  >
+                    <IconButton
+                      size="small"
+                      sx={{ color: "white" }}
+                      onClick={() => handleDeleteExistingImage(img.public_id)}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
+                </Box>
+              ))}
             </Box>
-          )}
+          </Box>
+        )}
         <Controller
           name="image"
           control={isEdit ? updateForm.control : createForm.control}
           render={({ field: { onChange, ref, name, onBlur } }) => (
             <TextField
               type="file"
-              inputProps={{ accept: "image/*", ref }}
+              inputProps={{ accept: "image/*", ref, multiple: true }}
               name={name}
               onBlur={onBlur}
               onChange={(e) => {
-                const file = (e.target as HTMLInputElement).files?.[0];
-                if (file) onChange(file);
+                const files = (e.target as HTMLInputElement).files;
+                if (files && files.length > 0) {
+                  onChange(Array.from(files));
+                }
               }}
               error={
                 isEdit
@@ -236,7 +311,7 @@ export const ServiceProviderForm: React.FC<ServiceProviderFormProps> = ({
                   ? (updateForm.formState.errors.image?.message as string)
                   : (createForm.formState.errors.image?.message as string)
               }
-              label={isEdit ? "Update Image (Optional)" : "Image"}
+              label={isEdit ? "Add New Images (Optional)" : "Images"}
               fullWidth
             />
           )}

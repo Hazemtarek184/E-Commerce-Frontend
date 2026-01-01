@@ -3,6 +3,7 @@ import type { IMainCategory, ISubCategory, IServiceProvider, IApiResponse } from
 
 const api = axios.create({
     baseURL: 'https://e-commerce-three-sigma-49.vercel.app/api',
+    // baseURL: 'http://localhost:8000/api', // development
 });
 
 // Categories

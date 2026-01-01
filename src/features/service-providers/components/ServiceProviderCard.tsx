@@ -68,49 +68,118 @@ export const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({
       <CardContent
         sx={{ p: 3, height: "100%", display: "flex", flexDirection: "column" }}
       >
-        <Box display="flex" alignItems="flex-start" gap={2} mb={2}>
-          <Badge
-            overlap="circular"
-            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-            badgeContent={
-              provider.isVerified ? (
-                <Box
-                  sx={{
-                    width: 16,
-                    height: 16,
-                    borderRadius: "50%",
-                    backgroundColor: "#4caf50",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    border: "2px solid white",
-                  }}
-                >
-                  <Typography sx={{ fontSize: 10, color: "white" }}>
-                    ✓
-                  </Typography>
-                </Box>
-              ) : null
-            }
-          >
-            <Avatar
-              src={
-                provider.imagesUrl && provider.imagesUrl.length > 0
-                  ? provider.imagesUrl[0].url
-                  : undefined
-              }
+        <Box sx={{ width: "100%", mb: 2 }}>
+          {provider.imagesUrl && provider.imagesUrl.length > 0 ? (
+            <Box
               sx={{
-                width: 56,
-                height: 56,
-                backgroundColor: "primary.main",
-                fontSize: "1.2rem",
-                fontWeight: "bold",
+                display: "flex",
+                gap: 1,
+                overflowX: "auto",
+                pb: 1,
+                "&::-webkit-scrollbar": {
+                  height: 6,
+                },
+                "&::-webkit-scrollbar-track": {
+                  backgroundColor: alpha("#000", 0.05),
+                  borderRadius: 3,
+                },
+                "&::-webkit-scrollbar-thumb": {
+                  backgroundColor: alpha("#000", 0.2),
+                  borderRadius: 3,
+                  "&:hover": {
+                    backgroundColor: alpha("#000", 0.3),
+                  },
+                },
               }}
             >
-              {getInitials(provider.name || "")}
-            </Avatar>
-          </Badge>
-          <Box sx={{ flex: 1, minWidth: 0 }}>
+              {provider.imagesUrl.map((img, index) => (
+                <Box
+                  key={img.public_id || index}
+                  sx={{
+                    flexShrink: 0,
+                    width: 120,
+                    height: 120,
+                    borderRadius: 2,
+                    overflow: "hidden",
+                    position: "relative",
+                  }}
+                >
+                  <img
+                    src={img.url}
+                    alt={`${provider.name} - ${index + 1}`}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
+                  />
+                  {index === 0 && provider.isVerified && (
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        top: 4,
+                        right: 4,
+                        width: 20,
+                        height: 20,
+                        borderRadius: "50%",
+                        backgroundColor: "#4caf50",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        border: "2px solid white",
+                        boxShadow: 1,
+                      }}
+                    >
+                      <Typography sx={{ fontSize: 12, color: "white" }}>
+                        ✓
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+              ))}
+            </Box>
+          ) : (
+            <Box display="flex" alignItems="center" gap={2}>
+              <Badge
+                overlap="circular"
+                anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                badgeContent={
+                  provider.isVerified ? (
+                    <Box
+                      sx={{
+                        width: 16,
+                        height: 16,
+                        borderRadius: "50%",
+                        backgroundColor: "#4caf50",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        border: "2px solid white",
+                      }}
+                    >
+                      <Typography sx={{ fontSize: 10, color: "white" }}>
+                        ✓
+                      </Typography>
+                    </Box>
+                  ) : null
+                }
+              >
+                <Avatar
+                  sx={{
+                    width: 56,
+                    height: 56,
+                    backgroundColor: "primary.main",
+                    fontSize: "1.2rem",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {getInitials(provider.name || "")}
+                </Avatar>
+              </Badge>
+            </Box>
+          )}
+
+          <Box sx={{ mt: 2 }}>
             <Box display="flex" alignItems="center" gap={1} mb={1}>
               <Typography variant="h6" fontWeight="700" noWrap>
                 {provider.name || "Unnamed Provider"}
