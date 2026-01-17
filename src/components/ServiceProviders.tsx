@@ -222,8 +222,8 @@ const ServiceProviders: React.FC<Props> = ({ subCategoryId, onBack }) => {
                 bio: formData.bio,
                 imagesUrl: formData.imagesUrl || [],
                 workingDays: formData.workingDays || [],
-                workingHours: formData.workingHours || [],
-                closingHours: formData.closingHours || [],
+                workingHour: formData.workingHour || "",
+                closingHour: formData.closingHour || "",
                 phoneContacts: formData.phoneContacts || [],
                 locationLinks: formData.locationLinks || [],
                 offers: formData.offers || [],
@@ -249,8 +249,8 @@ const ServiceProviders: React.FC<Props> = ({ subCategoryId, onBack }) => {
                     name: '',
                     bio: '',
                     workingDays: [],
-                    workingHours: [],
-                    closingHours: [],
+                    workingHour: "",
+                    closingHour: "",
                     phoneContacts: [{ phoneNumber: '', hasWhatsApp: false, canCall: true }],
                     locationLinks: [],
                     imagesUrl: [],
@@ -298,8 +298,8 @@ const ServiceProviders: React.FC<Props> = ({ subCategoryId, onBack }) => {
                 name: provider.name || '',
                 bio: provider.bio || '',
                 workingDays: provider.workingDays || [],
-                workingHours: provider.workingHours || [],
-                closingHours: provider.closingHours || [],
+                workingHour: provider.workingHour || "",
+                closingHour: provider.closingHour || "",
                 phoneContacts: provider.phoneContacts || [{ phoneNumber: '', hasWhatsApp: false, canCall: true }],
                 locationLinks: provider.locationLinks || [],
                 imagesUrl: provider.imagesUrl || [],
@@ -315,8 +315,8 @@ const ServiceProviders: React.FC<Props> = ({ subCategoryId, onBack }) => {
                 name: '',
                 bio: '',
                 workingDays: [],
-                workingHours: [],
-                closingHours: [],
+                workingHour: "",
+                closingHour: "",
                 phoneContacts: [{ phoneNumber: '', hasWhatsApp: false, canCall: true }],
                 locationLinks: [],
                 imagesUrl: [],
@@ -876,16 +876,22 @@ const ServiceProviders: React.FC<Props> = ({ subCategoryId, onBack }) => {
                                 required
                             />
                             <TextField
-                                label="Working Hours (comma separated)"
-                                value={formData.workingHours?.join(',') || ''}
-                                onChange={(e) => setFormData({ ...formData, workingHours: e.target.value.split(',').map((h) => h.trim()).filter((h) => !!h) })}
+                                label="Working Hour"
+                                type="time"
+                                InputLabelProps={{ shrink: true }}
+                                inputProps={{ step: 3600 }}
+                                value={formData.workingHour || ''}
+                                onChange={(e) => setFormData({ ...formData, workingHour: e.target.value })}
                                 fullWidth
                                 required
                             />
                             <TextField
-                                label="Closing Hours (comma separated)"
-                                value={formData.closingHours?.join(',') || ''}
-                                onChange={(e) => setFormData({ ...formData, closingHours: e.target.value.split(',').map((h) => h.trim()).filter((h) => !!h) })}
+                                label="Closing Hour"
+                                type="time"
+                                InputLabelProps={{ shrink: true }}
+                                inputProps={{ step: 3600 }}
+                                value={formData.closingHour || ''}
+                                onChange={(e) => setFormData({ ...formData, closingHour: e.target.value })}
                                 fullWidth
                                 required
                             />

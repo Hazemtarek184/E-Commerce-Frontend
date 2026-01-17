@@ -7,7 +7,7 @@ import type {
 
 const api = axios.create({
   baseURL: "https://e-commerce-three-sigma-49.vercel.app/api",
-  // baseURL: "http://localhost:8000/api", // develpment
+  // baseURL: "http://localhost:8000/api", // development
 });
 
 export const getServiceProvidersBySubCategory = async (
@@ -33,8 +33,8 @@ export const createServiceProvider = async (
   formData.append("name", data.name);
   formData.append("bio", data.bio);
   data.workingDays.forEach((day) => formData.append("workingDays", day));
-  data.workingHours.forEach((hour) => formData.append("workingHours", hour));
-  data.closingHours.forEach((hour) => formData.append("closingHours", hour));
+  formData.append("workingHour", data.workingHour);
+  formData.append("closingHour", data.closingHour);
   data.phoneContacts.forEach((contact, index) => {
     formData.append(
       `phoneContacts[${index}][phoneNumber]`,

@@ -32,12 +32,8 @@ export const createServiceProviderSchema = z.object({
   workingDays: z
     .array(z.string())
     .min(1, "At least one working day is required"),
-  workingHours: z
-    .array(z.string())
-    .min(1, "At least one working hour is required"),
-  closingHours: z
-    .array(z.string())
-    .min(1, "At least one closing hour is required"),
+  workingHour: z.string().min(1, "Working hour is required"),
+  closingHour: z.string().min(1, "Closing hour is required"),
   phoneContacts: z
     .array(phoneContactSchema)
     .min(1, "At least one phone contact is required"),
@@ -52,8 +48,8 @@ export const updateServiceProviderSchema = z.object({
   name: z.string().min(1, "Name is required").optional(),
   bio: z.string().min(1, "Bio is required").optional(),
   workingDays: z.array(z.string()).optional(),
-  workingHours: z.array(z.string()).optional(),
-  closingHours: z.array(z.string()).optional(),
+  workingHour: z.string().optional(),
+  closingHour: z.string().optional(),
   phoneContacts: z.array(phoneContactSchema).optional(),
   locationLinks: z.array(z.string()).optional(),
   offers: z.array(offerSchema).optional(),

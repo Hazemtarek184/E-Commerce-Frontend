@@ -1,6 +1,10 @@
 // @ts-nocheck
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import dayjs from 'dayjs';
 import {
   Box,
   TextField,
@@ -28,7 +32,7 @@ import type {
   UpdateServiceProviderInput,
 } from "../schemas";
 import type { IServiceProvider } from "../../../interfaces";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 interface ServiceProviderFormBaseProps {
   isLoading?: boolean;
@@ -50,29 +54,15 @@ type ServiceProviderFormProps =
   | UpdateServiceProviderFormProps;
 
 const DAYS_OF_WEEK = [
+  "Saturday",
+  "Sunday",
   "Monday",
   "Tuesday",
   "Wednesday",
   "Thursday",
   "Friday",
-  "Saturday",
-  "Sunday",
 ];
-const TIME_SLOTS = [
-  "08:00",
-  "09:00",
-  "10:00",
-  "11:00",
-  "12:00",
-  "13:00",
-  "14:00",
-  "15:00",
-  "16:00",
-  "17:00",
-  "18:00",
-  "19:00",
-  "20:00",
-];
+
 
 export const ServiceProviderForm: React.FC<ServiceProviderFormProps> = ({
   onSubmit,
@@ -84,6 +74,16 @@ export const ServiceProviderForm: React.FC<ServiceProviderFormProps> = ({
   const [existingImages, setExistingImages] = useState(
     defaultValues?.imagesUrl || []
   );
+  const [newImages, setNewImages] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Cleanup preview URLs on unmount
+  useEffect(() => {
+    return () => {
+      previewUrls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [previewUrls]);
 
   const normalizePhoneContacts = (
     contacts?: Array<{
@@ -114,8 +114,8 @@ export const ServiceProviderForm: React.FC<ServiceProviderFormProps> = ({
     name: defaultValues?.name || "",
     bio: defaultValues?.bio || "",
     workingDays: defaultValues?.workingDays || [],
-    workingHours: defaultValues?.workingHours || [],
-    closingHours: defaultValues?.closingHours || [],
+    workingHour: defaultValues?.workingHour || "",
+    closingHour: defaultValues?.closingHour || "",
     phoneContacts: normalizePhoneContacts(defaultValues?.phoneContacts),
     locationLinks: defaultValues?.locationLinks || [],
     offers: defaultValues?.offers || [],
@@ -170,12 +170,7 @@ export const ServiceProviderForm: React.FC<ServiceProviderFormProps> = ({
   const watchedWorkingDays = Array.isArray(watch("workingDays" as any))
     ? (watch("workingDays" as any) as string[])
     : [];
-  const watchedWorkingHours = Array.isArray(watch("workingHours" as any))
-    ? (watch("workingHours" as any) as string[])
-    : [];
-  const watchedClosingHours = Array.isArray(watch("closingHours" as any))
-    ? (watch("closingHours" as any) as string[])
-    : [];
+
 
   const toggleDay = (day: string) => {
     const currentDays = watchedWorkingDays;
@@ -189,22 +184,50 @@ export const ServiceProviderForm: React.FC<ServiceProviderFormProps> = ({
     }
   };
 
-  const toggleTime = (time: string, field: "workingHours" | "closingHours") => {
-    const currentTimes =
-      field === "workingHours" ? watchedWorkingHours : watchedClosingHours;
-    const newTimes = currentTimes.includes(time)
-      ? currentTimes.filter((t) => t !== time)
-      : [...currentTimes, time];
-    if (isEdit) {
-      (updateForm.setValue as any)(field, newTimes);
-    } else {
-      (createForm.setValue as any)(field, newTimes);
-    }
-  };
+
 
   const handleDeleteExistingImage = (publicId: string) => {
     setDeletedImageIds((prev) => [...prev, publicId]);
     setExistingImages((prev) => prev.filter((img) => img.public_id !== publicId));
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      const files = Array.from(event.target.files);
+      const newFiles = [...newImages, ...files];
+      setNewImages(newFiles);
+
+      // Generate previews
+      const newPreviews = files.map((file) => URL.createObjectURL(file));
+      setPreviewUrls((prev) => [...prev, ...newPreviews]);
+
+      // Update form value
+      if (isEdit) {
+        (updateForm.setValue as any)("image", newFiles, { shouldValidate: true });
+      } else {
+        (createForm.setValue as any)("image", newFiles, { shouldValidate: true });
+      }
+    }
+  };
+
+  const handleRemoveNewImage = (index: number) => {
+    const updatedImages = newImages.filter((_, i) => i !== index);
+    setNewImages(updatedImages);
+
+    // Revoke and remove preview
+    URL.revokeObjectURL(previewUrls[index]);
+    setPreviewUrls((prev) => prev.filter((_, i) => i !== index));
+
+    // Update form value
+    if (isEdit) {
+      (updateForm.setValue as any)("image", updatedImages, { shouldValidate: true });
+    } else {
+      (createForm.setValue as any)("image", updatedImages, { shouldValidate: true });
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
   };
 
   const handleFormSubmit = (data: any) => {
@@ -222,100 +245,141 @@ export const ServiceProviderForm: React.FC<ServiceProviderFormProps> = ({
       sx={{ display: "flex", flexDirection: "column", gap: 3 }}
     >
       <Box>
-        {isEdit && existingImages.length > 0 && (
-          <Box mb={2}>
-            <Typography variant="subtitle2" gutterBottom>
-              Current Images:
-            </Typography>
+        <Typography variant="subtitle2" gutterBottom>
+          Images
+        </Typography>
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+          {/* Existing Images */}
+          {existingImages.map((img) => (
             <Box
+              key={img.public_id}
               sx={{
-                display: "flex",
-                gap: 1,
-                flexWrap: "wrap",
+                position: "relative",
+                width: 100,
+                height: 100,
+                borderRadius: 2,
+                overflow: "hidden",
+                border: "1px solid #e0e0e0",
+                "&:hover .delete-overlay": { opacity: 1 },
               }}
             >
-              {existingImages.map((img) => (
-                <Box
-                  key={img.public_id}
-                  sx={{
-                    position: "relative",
-                    width: 80,
-                    height: 80,
-                    borderRadius: 1,
-                    overflow: "hidden",
-                    "&:hover .delete-overlay": {
-                      opacity: 1,
-                    },
-                  }}
+              <img
+                src={img.url}
+                alt="Existing"
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+              <Box
+                className="delete-overlay"
+                sx={{
+                  position: "absolute",
+                  inset: 0,
+                  bgcolor: "rgba(0,0,0,0.5)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  opacity: 0,
+                  transition: "opacity 0.2s",
+                }}
+              >
+                <IconButton
+                  size="small"
+                  sx={{ color: "white" }}
+                  onClick={() => handleDeleteExistingImage(img.public_id)}
                 >
-                  <img
-                    src={img.url}
-                    alt="Service Provider"
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    }}
-                  />
-                  <Box
-                    className="delete-overlay"
-                    sx={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      backgroundColor: "rgba(0,0,0,0.5)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      opacity: 0,
-                      transition: "opacity 0.2s",
-                    }}
-                  >
-                    <IconButton
-                      size="small"
-                      sx={{ color: "white" }}
-                      onClick={() => handleDeleteExistingImage(img.public_id)}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Box>
-                </Box>
-              ))}
+                  <DeleteIcon />
+                </IconButton>
+              </Box>
             </Box>
-          </Box>
-        )}
-        <Controller
-          name="image"
-          control={isEdit ? updateForm.control : createForm.control}
-          render={({ field: { onChange, ref, name, onBlur } }) => (
-            <TextField
-              type="file"
-              inputProps={{ accept: "image/*", ref, multiple: true }}
-              name={name}
-              onBlur={onBlur}
-              onChange={(e) => {
-                const files = (e.target as HTMLInputElement).files;
-                if (files && files.length > 0) {
-                  onChange(Array.from(files));
-                }
+          ))}
+
+          {/* New Image Previews */}
+          {previewUrls.map((url, index) => (
+            <Box
+              key={url}
+              sx={{
+                position: "relative",
+                width: 100,
+                height: 100,
+                borderRadius: 2,
+                overflow: "hidden",
+                border: "1px solid #e0e0e0",
+                "&:hover .delete-overlay": { opacity: 1 },
               }}
-              error={
-                isEdit
-                  ? !!updateForm.formState.errors.image
-                  : !!createForm.formState.errors.image
-              }
-              helperText={
-                isEdit
-                  ? (updateForm.formState.errors.image?.message as string)
-                  : (createForm.formState.errors.image?.message as string)
-              }
-              label={isEdit ? "Add New Images (Optional)" : "Images"}
-              fullWidth
-            />
-          )}
+            >
+              <img
+                src={url}
+                alt="Preview"
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+              <Box
+                className="delete-overlay"
+                sx={{
+                  position: "absolute",
+                  inset: 0,
+                  bgcolor: "rgba(0,0,0,0.5)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  opacity: 0,
+                  transition: "opacity 0.2s",
+                }}
+              >
+                <IconButton
+                  size="small"
+                  sx={{ color: "white" }}
+                  onClick={() => handleRemoveNewImage(index)}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </Box>
+            </Box>
+          ))}
+
+          {/* Add Image Button */}
+          <Box
+            onClick={triggerFileInput}
+            sx={{
+              width: 100,
+              height: 100,
+              borderRadius: 2,
+              border: "2px dashed #e0e0e0",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              transition: "border-color 0.2s",
+              "&:hover": { borderColor: "primary.main", color: "primary.main" },
+            }}
+          >
+            <AddIcon fontSize="large" color="action" />
+          </Box>
+        </Box>
+
+        {/* Hidden File Input */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          style={{ display: "none" }}
+          accept="image/*"
+          multiple
+          onChange={handleFileSelect}
         />
+        {/* Error Message */}
+        {(isEdit
+          ? updateForm.formState.errors.image
+          : createForm.formState.errors.image) && (
+            <Typography
+              variant="caption"
+              color="error"
+              sx={{ mt: 1, display: "block" }}
+            >
+              {
+                (isEdit
+                  ? (updateForm.formState.errors.image?.message as string)
+                  : (createForm.formState.errors.image?.message as string))
+              }
+            </Typography>
+          )}
       </Box>
 
       <Controller
@@ -376,61 +440,50 @@ export const ServiceProviderForm: React.FC<ServiceProviderFormProps> = ({
         )}
       </Box>
 
-      <Box>
-        <Typography variant="subtitle2" gutterBottom>
-          Working Hours *
-        </Typography>
-        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-          {TIME_SLOTS.map((time) => (
-            <Chip
-              key={time}
-              label={time}
-              onClick={() => toggleTime(time, "workingHours")}
-              color={watchedWorkingHours.includes(time) ? "primary" : "default"}
-              variant={
-                watchedWorkingHours.includes(time) ? "filled" : "outlined"
-              }
-            />
-          ))}
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <Stack direction="row" spacing={2}>
+          <Controller
+            name="workingHour"
+            control={form.control}
+            render={({ field }) => (
+              <TimePicker
+                label="Opening Hour"
+                value={field.value ? dayjs(field.value, 'HH:mm') : null}
+                onChange={(newValue) => {
+                  field.onChange(newValue ? newValue.format('HH:mm') : '');
+                }}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    error: !!(errors as any).workingHour,
+                    helperText: (errors as any).workingHour?.message as string
+                  }
+                }}
+              />
+            )}
+          />
+          <Controller
+            name="closingHour"
+            control={form.control}
+            render={({ field }) => (
+              <TimePicker
+                label="Closing Hour"
+                value={field.value ? dayjs(field.value, 'HH:mm') : null}
+                onChange={(newValue) => {
+                  field.onChange(newValue ? newValue.format('HH:mm') : '');
+                }}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    error: !!(errors as any).closingHour,
+                    helperText: (errors as any).closingHour?.message as string
+                  }
+                }}
+              />
+            )}
+          />
         </Stack>
-        {errors.workingHours && (
-          <Typography
-            variant="caption"
-            color="error"
-            sx={{ mt: 0.5, display: "block" }}
-          >
-            {errors.workingHours.message as string}
-          </Typography>
-        )}
-      </Box>
-
-      <Box>
-        <Typography variant="subtitle2" gutterBottom>
-          Closing Hours *
-        </Typography>
-        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-          {TIME_SLOTS.map((time) => (
-            <Chip
-              key={time}
-              label={time}
-              onClick={() => toggleTime(time, "closingHours")}
-              color={watchedClosingHours.includes(time) ? "primary" : "default"}
-              variant={
-                watchedClosingHours.includes(time) ? "filled" : "outlined"
-              }
-            />
-          ))}
-        </Stack>
-        {errors.closingHours && (
-          <Typography
-            variant="caption"
-            color="error"
-            sx={{ mt: 0.5, display: "block" }}
-          >
-            {errors.closingHours.message as string}
-          </Typography>
-        )}
-      </Box>
+      </LocalizationProvider>
 
       <Box>
         <Box

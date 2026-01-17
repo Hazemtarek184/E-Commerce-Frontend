@@ -27,8 +27,8 @@ export interface IServiceProvider {
     bio: string;
     imagesUrl?: IImageUrl[];
     workingDays: string[];
-    workingHours?: string[];
-    closingHours?: string[];
+    workingHour?: string;
+    closingHour?: string;
     phoneContacts: IPhoneContact[];
     locationLinks: string[];
     offers?: IOffer[];
