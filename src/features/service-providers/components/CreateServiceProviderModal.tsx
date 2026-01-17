@@ -1,10 +1,10 @@
 import { Dialog, DialogTitle, DialogContent, FormControl, InputLabel, Select, MenuItem, Box } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ServiceProviderForm } from './ServiceProviderForm';
 import { useCreateServiceProvider } from '../mutations';
 import type { CreateServiceProviderInput } from '../schemas';
-import { getCategories, getSubCategories } from '../../../api';
-import type { IMainCategory, ISubCategory } from '../../../interfaces';
+import { useCategories } from '../../../hooks/useCategories';
+import { useSubCategories } from '../../../hooks/useSubCategories';
 
 interface CreateServiceProviderModalProps {
   open: boolean;
@@ -20,52 +20,14 @@ export const CreateServiceProviderModal: React.FC<CreateServiceProviderModalProp
   mainCategoryId: initialMainCategoryId,
 }) => {
   const createMutation = useCreateServiceProvider();
-  const [categories, setCategories] = useState<IMainCategory[]>([]);
-  const [subCategories, setSubCategories] = useState<ISubCategory[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>(initialMainCategoryId || '');
   const [selectedSubCategoryId, setSelectedSubCategoryId] = useState<string>(initialSubCategoryId || '');
-  const [loading, setLoading] = useState(false);
 
-  // Fetch Categories on mount
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const res = await getCategories();
-        if (res.data?.success && Array.isArray(res.data.data?.categories)) {
-          setCategories(res.data.data.categories);
-        }
-      } catch (error) {
-        console.error('Error fetching categories:', error);
-      }
-    };
-    fetchCategories();
-  }, []);
-
-  // Fetch SubCategories when Category changes
-  useEffect(() => {
-    const fetchSubCats = async () => {
-      if (!selectedCategoryId) {
-        setSubCategories([]);
-        return;
-      }
-      setLoading(true);
-      try {
-        const res = await getSubCategories(selectedCategoryId);
-        if (res.data?.success && Array.isArray(res.data.data?.subCategories)) {
-          setSubCategories(res.data.data.subCategories);
-        }
-      } catch (error) {
-        console.error('Error fetching sub-categories:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchSubCats();
-  }, [selectedCategoryId]);
+  const { data: categories = [] } = useCategories();
+  const { data: subCategories = [], isLoading: subCategoriesLoading } = useSubCategories(selectedCategoryId);
 
   const handleSubmit = async (data: CreateServiceProviderInput) => {
     if (!selectedSubCategoryId) {
-      // Validation could be better handled, but for now relying on button disable or implicit check
       return;
     }
     try {
@@ -99,7 +61,7 @@ export const CreateServiceProviderModal: React.FC<CreateServiceProviderModalProp
             </Select>
           </FormControl>
 
-          <FormControl fullWidth disabled={!selectedCategoryId || loading}>
+          <FormControl fullWidth disabled={!selectedCategoryId || subCategoriesLoading}>
             <InputLabel>Sub-Category</InputLabel>
             <Select
               value={selectedSubCategoryId}
@@ -124,4 +86,3 @@ export const CreateServiceProviderModal: React.FC<CreateServiceProviderModalProp
     </Dialog>
   );
 };
-

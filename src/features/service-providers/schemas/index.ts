@@ -26,7 +26,7 @@ export const imageUrlSchema = z.object({
 });
 
 export const createServiceProviderSchema = z.object({
-  image: z.array(z.instanceof(File)).optional(),
+  image: z.array(z.any()).optional(), // Changed from z.instanceof(File) to z.any() to accept compressed Blob/File
   name: z.string().min(1, "Name is required"),
   bio: z.string().min(1, "Bio is required"),
   workingDays: z
@@ -44,7 +44,7 @@ export const createServiceProviderSchema = z.object({
 });
 
 export const updateServiceProviderSchema = z.object({
-  image: z.array(z.instanceof(File)).optional(),
+  image: z.array(z.any()).optional(), // Changed from z.instanceof(File) to z.any() to accept compressed Blob/File
   name: z.string().min(1, "Name is required").optional(),
   bio: z.string().min(1, "Bio is required").optional(),
   workingDays: z.array(z.string()).optional(),

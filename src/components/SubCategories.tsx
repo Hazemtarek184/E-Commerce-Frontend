@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import {
     Box,
     Button,
-    CircularProgress,
     Dialog,
     DialogActions,
     DialogContent,
@@ -16,27 +15,29 @@ import {
     InputLabel,
     Card,
     CardContent,
-    Paper,
     Avatar,
     Tooltip,
     Fade,
     Container,
-    InputAdornment,
-    alpha,
     Stack,
-    Chip
+    Chip,
+    Paper
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
-import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import FolderIcon from '@mui/icons-material/Folder';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import LanguageIcon from '@mui/icons-material/Language';
 import TranslateIcon from '@mui/icons-material/Translate';
-import { getSubCategories, createSubCategory, updateSubCategory, deleteSubCategory, getCategories } from '../api';
-import type { ISubCategory, IMainCategory } from '../interfaces';
+
+import type { ISubCategory } from '../interfaces';
+import { useSubCategories, useSubCategoryMutations } from '../hooks/useSubCategories';
+import { useCategories } from '../hooks/useCategories';
+import { PageHeader } from './common/PageHeader';
+import { ErrorDisplay } from './common/ErrorDisplay';
+import { SearchBar } from './common/SearchBar';
+import { DataStateDisplay } from './common/DataStateDisplay';
 
 interface Props {
     mainCategoryId: string;
@@ -45,54 +46,23 @@ interface Props {
 }
 
 const SubCategories: React.FC<Props> = ({ mainCategoryId, onSelectSubCategory, onBack }) => {
-    const [subCategories, setSubCategories] = useState<ISubCategory[]>([]);
-    const [categories, setCategories] = useState<IMainCategory[]>([]);
+    // State
     const [selectedCategoryId, setSelectedCategoryId] = useState(mainCategoryId);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editSubCategory, setEditSubCategory] = useState<ISubCategory | null>(null);
     const [englishName, setEnglishName] = useState('');
     const [arabicName, setArabicName] = useState('');
-    const [searchQuery, setSearchQuery] = useState('');
-    const [filteredSubCategories, setFilteredSubCategories] = useState<ISubCategory[]>([]);
     const [dialogSelectedCategoryId, setDialogSelectedCategoryId] = useState('');
 
-    // Fetch all categories for dropdown
-    useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                setLoading(true);
-                clearError();
-                const res = await getCategories();
-                const apiCategories = res.data?.data?.categories;
-                if (res.data && res.data.success && Array.isArray(apiCategories)) {
-                    setCategories(apiCategories);
-                } else {
-                    setCategories([]);
-                    setError(res.data?.message || 'Failed to fetch categories');
-                }
-            } catch (err: any) {
-                setCategories([]);
-                setError(err.response?.data?.message || 'Failed to fetch categories');
-                console.error('Error fetching categories:', err);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchCategories();
-    }, []);
+    // Hooks
+    const { data: categories = [], isLoading: categoriesLoading, error: categoriesError } = useCategories();
+    const { data: subCategories = [], isLoading: subCategoriesLoading, error: subCategoriesError } = useSubCategories(selectedCategoryId);
+    const { create, update, remove } = useSubCategoryMutations();
 
-    // Fetch sub-categories when selectedCategoryId changes
-    useEffect(() => {
-        if (selectedCategoryId) fetchSubCategories(selectedCategoryId);
-        // Update dialog selection defaults when page selection changes
-        if (!dialogOpen) {
-            setDialogSelectedCategoryId(selectedCategoryId || '');
-        }
-    }, [selectedCategoryId]);
+    // Derived State
+    const [filteredSubCategories, setFilteredSubCategories] = useState<ISubCategory[]>([]);
 
-    // Search functionality
     useEffect(() => {
         const filtered = subCategories.filter(subCategory =>
             subCategory.englishName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -101,37 +71,19 @@ const SubCategories: React.FC<Props> = ({ mainCategoryId, onSelectSubCategory, o
         setFilteredSubCategories(filtered);
     }, [searchQuery, subCategories]);
 
-    const fetchSubCategories = async (categoryId: string) => {
-        setLoading(true);
-        clearError();
-        try {
-            const res = await getSubCategories(categoryId);
-            console.log('SubCategories API response:', res.data);
-            const apiSubCategories = res.data?.data?.subCategories;
-            if (res.data.success && Array.isArray(apiSubCategories)) {
-                setSubCategories(apiSubCategories);
-                setFilteredSubCategories(apiSubCategories);
-            } else {
-                setSubCategories([]);
-                setFilteredSubCategories([]);
-                setError(res.data?.message || 'Failed to fetch sub-categories');
-            }
-        } catch (err: any) {
-            setSubCategories([]);
-            setFilteredSubCategories([]);
-            setError(err.response?.data?.message || 'Failed to fetch sub-categories');
-            console.error('Error fetching sub-categories:', err);
-        } finally {
-            setLoading(false);
+    useEffect(() => {
+        // Update dialog selection defaults when page selection changes
+        if (!dialogOpen) {
+            setDialogSelectedCategoryId(selectedCategoryId || '');
         }
-    };
+    }, [selectedCategoryId, dialogOpen]);
+
 
     const handleOpenDialog = (subCategory?: ISubCategory) => {
         setEditSubCategory(subCategory || null);
         setEnglishName(subCategory?.englishName || '');
         setArabicName(subCategory?.arabicName || '');
-        // If editing, we assume it belongs to the currently viewed category (since we don't have parent ID in object)
-        // If creating, we default to currently viewed category, or the first available if none selected.
+        // Default to current category or first available
         setDialogSelectedCategoryId(selectedCategoryId || categories[0]?._id || '');
         setDialogOpen(true);
     };
@@ -144,222 +96,48 @@ const SubCategories: React.FC<Props> = ({ mainCategoryId, onSelectSubCategory, o
     };
 
     const handleSave = async () => {
-        try {
-            setLoading(true);
-            clearError();
-
-            if (!englishName.trim()) {
-                setError('English name is required');
-                return;
-            }
-
-            if (!arabicName.trim()) {
-                setError('Arabic name is required');
-                return;
-            }
-
-            if (!dialogSelectedCategoryId) {
-                setError('Category is required');
-                return;
-            }
-
-            if (editSubCategory && editSubCategory._id) {
-                // Update currently only supports name changes based on API signature.
-                const response = await updateSubCategory(editSubCategory._id, { englishName, arabicName });
-                if (response.data.success) {
-                    fetchSubCategories(selectedCategoryId);
-                    handleCloseDialog();
-                } else {
-                    setError(response.data.message || 'Failed to update sub-category');
-                }
-            } else {
-                // Create with the selected category from the dialog
-                const response = await createSubCategory(dialogSelectedCategoryId, { englishName, arabicName });
-                if (response.data.success) {
-                    // If we added to the CURRENTLY viewed category, refresh.
-                    if (dialogSelectedCategoryId === selectedCategoryId) {
-                        fetchSubCategories(selectedCategoryId);
-                    }
-                    handleCloseDialog();
-                } else {
-                    setError(response.data.message || 'Failed to create sub-category');
-                }
-            }
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'Failed to save sub-category');
-            console.error('Error saving sub-category:', err);
-        } finally {
-            setLoading(false);
+        if (editSubCategory && editSubCategory._id) {
+            await update.mutateAsync({ id: editSubCategory._id, data: { englishName, arabicName } });
+        } else {
+            await create.mutateAsync({ categoryId: dialogSelectedCategoryId, data: { englishName, arabicName } });
         }
+        handleCloseDialog();
     };
 
     const handleDelete = async (subCategoryId: string) => {
-        if (!window.confirm('Are you sure you want to delete this sub-category?')) {
-            return;
-        }
-
-        try {
-            setLoading(true);
-            clearError();
-
-            const response = await deleteSubCategory(subCategoryId);
-            if (response.data.success) {
-                fetchSubCategories(selectedCategoryId);
-            } else {
-                setError(response.data.message || 'Failed to delete sub-category');
-            }
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'Failed to delete sub-category');
-            console.error('Error deleting sub-category:', err);
-        } finally {
-            setLoading(false);
-        }
+        if (!window.confirm('Are you sure you want to delete this sub-category?')) return;
+        await remove.mutateAsync(subCategoryId);
     };
-
-    const clearError = () => {
-        setError(null);
-    };
-
-    // Clear error when search query changes
-    useEffect(() => {
-        if (error) {
-            clearError();
-        }
-    }, [searchQuery]);
 
     const getSelectedCategoryName = () => {
         const category = categories.find(cat => cat._id === selectedCategoryId);
         return category ? `${category.englishName} / ${category.arabicName}` : 'Select Category';
     };
 
+    const mutationError = create.error || update.error || remove.error;
+    const errorMessage = mutationError ? (mutationError as any).response?.data?.message || mutationError.message : null;
+    const fetchError = (categoriesError as any)?.message || (subCategoriesError as any)?.message;
+
     return (
         <Container maxWidth="xl" sx={{ py: 4 }}>
-            {/* Header Section */}
-            <Box sx={{ mb: 4 }}>
-                <Paper
-                    elevation={0}
-                    sx={{
-                        p: 4,
-                        borderRadius: 3,
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        color: 'white',
-                        position: 'relative',
-                        overflow: 'hidden',
-                        '&::before': {
-                            content: '""',
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            background: 'rgba(255,255,255,0.1)',
-                            backdropFilter: 'blur(10px)',
-                        }
-                    }}
-                >
-                    <Box sx={{ position: 'relative', zIndex: 1 }}>
-                        <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
-                            <Box display="flex" alignItems="center" gap={2}>
-                                <IconButton
-                                    onClick={onBack}
-                                    sx={{
-                                        color: 'white',
-                                        backgroundColor: 'rgba(255,255,255,0.2)',
-                                        '&:hover': {
-                                            backgroundColor: 'rgba(255,255,255,0.3)',
-                                        }
-                                    }}
-                                >
-                                    <ArrowBackIcon />
-                                </IconButton>
-                                <Box>
-                                    <Typography variant="h4" fontWeight="700" gutterBottom>
-                                        Sub-Categories
-                                    </Typography>
-                                    <Typography variant="subtitle1" sx={{ opacity: 0.9 }}>
-                                        Manage and organize sub-categories for better service organization
-                                    </Typography>
-                                </Box>
-                            </Box>
-                            <Button
-                                variant="contained"
-                                startIcon={<AddIcon />}
-                                size="large"
-                                onClick={() => handleOpenDialog()}
-                                sx={{
-                                    borderRadius: 3,
-                                    backgroundColor: 'rgba(255,255,255,0.2)',
-                                    backdropFilter: 'blur(10px)',
-                                    color: 'white',
-                                    border: '1px solid rgba(255,255,255,0.3)',
-                                    '&:hover': {
-                                        backgroundColor: 'rgba(255,255,255,0.3)',
-                                    }
-                                }}
-                            >
-                                Add Sub-Category
-                            </Button>
-                        </Box>
-                    </Box>
-                </Paper>
-            </Box>
+            <PageHeader
+                title="Sub-Categories"
+                subtitle="Manage and organize sub-categories"
+                icon={<IconButton onClick={onBack} sx={{ color: 'white' }}><ArrowBackIcon /></IconButton>}
+                actionButtonText="Add Sub-Category"
+                onAction={() => handleOpenDialog()}
+            />
 
-            {/* Error Display */}
-            {error && (
-                <Paper
-                    elevation={1}
-                    sx={{
-                        p: 2,
-                        mb: 3,
-                        borderRadius: 2,
-                        backgroundColor: '#ffebee',
-                        border: '1px solid #f44336'
-                    }}
-                >
-                    <Box display="flex" justifyContent="space-between" alignItems="center">
-                        <Typography color="error" variant="body2">
-                            {error}
-                        </Typography>
-                        <IconButton size="small" onClick={clearError} sx={{ color: '#f44336' }}>
-                            <DeleteIcon fontSize="small" />
-                        </IconButton>
-                    </Box>
-                </Paper>
-            )}
+            <ErrorDisplay error={errorMessage || fetchError} />
 
-            {/* Search and Filters Section */}
-            <Paper elevation={1} sx={{ p: 3, mb: 4, borderRadius: 3, backgroundColor: alpha('#f5f5f5', 0.5) }}>
+            <Paper elevation={1} sx={{ p: 3, mb: 4, borderRadius: 3, backgroundColor: 'rgba(245, 245, 245, 0.5)' }}>
                 <Box display="flex" flexDirection="column" gap={3}>
-                    {/* Search Bar */}
-                    <Box>
-                        <TextField
-                            fullWidth
-                            placeholder="Search sub-categories by name..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            InputProps={{
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <SearchIcon color="action" />
-                                    </InputAdornment>
-                                ),
-                            }}
-                            sx={{
-                                '& .MuiOutlinedInput-root': {
-                                    borderRadius: 3,
-                                    backgroundColor: alpha('#f5f5f5', 0.5),
-                                    '&:hover': {
-                                        backgroundColor: alpha('#f5f5f5', 0.8),
-                                    },
-                                    '&.Mui-focused': {
-                                        backgroundColor: 'white',
-                                    }
-                                }
-                            }}
-                        />
-                    </Box>
+                    <SearchBar
+                        value={searchQuery}
+                        onChange={setSearchQuery}
+                        placeholder="Search sub-categories by name..."
+                    />
 
-                    {/* Category Filter */}
                     <Box>
                         <Box display="flex" alignItems="center" gap={2} mb={2}>
                             <FilterListIcon color="action" />
@@ -371,10 +149,10 @@ const SubCategories: React.FC<Props> = ({ mainCategoryId, onSelectSubCategory, o
                             <InputLabel id="category-select-label">Category</InputLabel>
                             <Select
                                 labelId="category-select-label"
-                                value={selectedCategoryId}
+                                value={selectedCategoryId || ''}
                                 label="Category"
                                 onChange={e => setSelectedCategoryId(e.target.value)}
-                                sx={{ borderRadius: 2 }}
+                                sx={{ borderRadius: 2, backgroundColor: 'white' }}
                             >
                                 {categories.map(cat => (
                                     <MenuItem key={cat._id} value={cat._id}>
@@ -387,7 +165,6 @@ const SubCategories: React.FC<Props> = ({ mainCategoryId, onSelectSubCategory, o
                 </Box>
             </Paper>
 
-            {/* Results Header */}
             {filteredSubCategories.length > 0 && (
                 <Box sx={{ mb: 3 }}>
                     <Typography variant="h6" color="text.secondary">
@@ -398,12 +175,20 @@ const SubCategories: React.FC<Props> = ({ mainCategoryId, onSelectSubCategory, o
                 </Box>
             )}
 
-            {/* Sub-Categories Grid */}
-            {loading ? (
-                <Box display="flex" justifyContent="center" py={8}>
-                    <CircularProgress size={60} />
-                </Box>
-            ) : filteredSubCategories.length > 0 ? (
+            <DataStateDisplay
+                loading={categoriesLoading || subCategoriesLoading}
+                empty={filteredSubCategories.length === 0}
+                emptyIcon={<FolderIcon />}
+                emptyTitle="No sub-categories found"
+                emptyMessage={
+                    searchQuery
+                        ? `No sub-categories match "${searchQuery}"`
+                        : selectedCategoryId
+                            ? 'No sub-categories available for the selected category'
+                            : 'Please select a category to view sub-categories'
+                }
+                onClearSearch={searchQuery ? () => setSearchQuery('') : undefined}
+            >
                 <Box
                     display="grid"
                     gridTemplateColumns={{
@@ -434,10 +219,9 @@ const SubCategories: React.FC<Props> = ({ mainCategoryId, onSelectSubCategory, o
                                         }
                                     }
                                 }}
-                                onClick={() => onSelectSubCategory(subCategory._id!)}
+                                onClick={() => subCategory._id && onSelectSubCategory(subCategory._id)}
                             >
                                 <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
-                                    {/* Sub-Category Header */}
                                     <Box display="flex" alignItems="flex-start" gap={2} mb={2}>
                                         <Avatar
                                             sx={{
@@ -452,7 +236,7 @@ const SubCategories: React.FC<Props> = ({ mainCategoryId, onSelectSubCategory, o
                                         </Avatar>
                                         <Box sx={{ flex: 1, minWidth: 0 }}>
                                             <Typography variant="h6" fontWeight="700" noWrap>
-                                                {subCategory.englishName || 'Unnamed Sub-Category'}
+                                                {subCategory.englishName || 'Unnamed'}
                                             </Typography>
                                             <Typography variant="body2" color="text.secondary" noWrap>
                                                 {subCategory.arabicName || 'بدون اسم'}
@@ -460,9 +244,7 @@ const SubCategories: React.FC<Props> = ({ mainCategoryId, onSelectSubCategory, o
                                         </Box>
                                     </Box>
 
-                                    {/* Sub-Category Details */}
                                     <Stack spacing={2} sx={{ flex: 1 }}>
-                                        {/* Language Indicators */}
                                         <Box display="flex" flexWrap="wrap" gap={1}>
                                             <Chip
                                                 icon={<LanguageIcon />}
@@ -479,19 +261,8 @@ const SubCategories: React.FC<Props> = ({ mainCategoryId, onSelectSubCategory, o
                                                 sx={{ fontSize: '0.7rem', height: 20 }}
                                             />
                                         </Box>
-
-                                        {/* Names Display */}
-                                        <Box>
-                                            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                                                <strong>English:</strong> {subCategory.englishName || 'Not specified'}
-                                            </Typography>
-                                            <Typography variant="body2" color="text.secondary">
-                                                <strong>العربية:</strong> {subCategory.arabicName || 'غير محدد'}
-                                            </Typography>
-                                        </Box>
                                     </Stack>
 
-                                    {/* Floating Action Buttons */}
                                     <Box
                                         className="subcategory-actions"
                                         sx={{
@@ -537,7 +308,7 @@ const SubCategories: React.FC<Props> = ({ mainCategoryId, onSelectSubCategory, o
                                                 }}
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    handleDelete(subCategory._id!);
+                                                    if (subCategory._id) handleDelete(subCategory._id);
                                                 }}
                                             >
                                                 <DeleteIcon fontSize="small" />
@@ -549,45 +320,10 @@ const SubCategories: React.FC<Props> = ({ mainCategoryId, onSelectSubCategory, o
                         </Fade>
                     ))}
                 </Box>
-            ) : (
-                <Paper
-                    elevation={0}
-                    sx={{
-                        p: 8,
-                        textAlign: 'center',
-                        borderRadius: 3,
-                        backgroundColor: alpha('#f5f5f5', 0.5)
-                    }}
-                >
-                    <FolderIcon sx={{ fontSize: 80, color: 'text.disabled', mb: 2 }} />
-                    <Typography variant="h6" color="text.secondary" gutterBottom>
-                        No sub-categories found
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" mb={3}>
-                        {searchQuery
-                            ? `No sub-categories match your search for "${searchQuery}"`
-                            : selectedCategoryId
-                                ? 'No sub-categories available for the selected category'
-                                : 'Please select a category to view sub-categories'
-                        }
-                    </Typography>
-                    {searchQuery && (
-                        <Button
-                            variant="outlined"
-                            onClick={() => setSearchQuery('')}
-                            sx={{ borderRadius: 2 }}
-                        >
-                            Clear Search
-                        </Button>
-                    )}
-                </Paper>
-            )}
+            </DataStateDisplay>
 
-            {/* Dialog for Add/Edit Sub-Category */}
             <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-                <DialogTitle>
-                    {editSubCategory ? 'Edit Sub-Category' : 'Add Sub-Category'}
-                </DialogTitle>
+                <DialogTitle>{editSubCategory ? 'Edit Sub-Category' : 'Add Sub-Category'}</DialogTitle>
                 <DialogContent>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
                         <FormControl fullWidth required>
@@ -597,7 +333,7 @@ const SubCategories: React.FC<Props> = ({ mainCategoryId, onSelectSubCategory, o
                                 value={dialogSelectedCategoryId}
                                 label="Category"
                                 onChange={(e) => setDialogSelectedCategoryId(e.target.value)}
-                                disabled={!!editSubCategory} // Disable when editing
+                                disabled={!!editSubCategory}
                             >
                                 {categories.map(cat => (
                                     <MenuItem key={cat._id} value={cat._id}>
@@ -627,9 +363,9 @@ const SubCategories: React.FC<Props> = ({ mainCategoryId, onSelectSubCategory, o
                     <Button
                         onClick={handleSave}
                         variant="contained"
-                        disabled={loading || !englishName.trim() || !arabicName.trim() || !dialogSelectedCategoryId}
+                        disabled={create.isPending || update.isPending || !englishName.trim() || !arabicName.trim() || !dialogSelectedCategoryId}
                     >
-                        {editSubCategory ? 'Update' : 'Add'}
+                        {create.isPending || update.isPending ? 'Saving...' : (editSubCategory ? 'Update' : 'Add')}
                     </Button>
                 </DialogActions>
             </Dialog>
@@ -637,4 +373,4 @@ const SubCategories: React.FC<Props> = ({ mainCategoryId, onSelectSubCategory, o
     );
 };
 
-export default SubCategories; 
+export default SubCategories;

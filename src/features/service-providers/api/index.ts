@@ -62,12 +62,7 @@ export const createServiceProvider = async (
 
   const response = await api.post<IApiResponse<IServiceProvider>>(
     `/service-providers/${subCategoryId}`,
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
+    formData
   );
   return response.data;
 };
@@ -91,11 +86,7 @@ export const updateServiceProvider = async (
 
   const response = await api.put<
     IApiResponse<{ serviceProvider: IServiceProvider }>
-  >(`/service-providers/${serviceProviderId}`, formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
+  >(`/service-providers/${serviceProviderId}`, formData);
   return response.data;
 };
 

@@ -2,13 +2,6 @@ import { useState, useEffect } from 'react';
 import {
   Box,
   Button,
-  CircularProgress,
-  Paper,
-  Typography,
-  TextField,
-  InputAdornment,
-  IconButton,
-  alpha,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -17,19 +10,28 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Typography,
+  Paper,
+  alpha,
+  IconButton
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import SearchIcon from '@mui/icons-material/Search';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import PersonIcon from '@mui/icons-material/Person';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import PeopleIcon from '@mui/icons-material/People';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+
 import { useServiceProviders } from '../queries';
 import { useDeleteServiceProvider } from '../mutations';
 import { ServiceProviderList } from '../components/ServiceProviderList';
 import { CreateServiceProviderModal } from '../components/CreateServiceProviderModal';
 import { UpdateServiceProviderModal } from '../components/UpdateServiceProviderModal';
-import type { IServiceProvider, IMainCategory, ISubCategory } from '../../../interfaces';
-import { getCategories, getSubCategories } from '../../../api';
+import type { IServiceProvider } from '../../../interfaces';
+
+import { useCategories } from '../../../hooks/useCategories';
+import { useSubCategories } from '../../../hooks/useSubCategories';
+import { PageHeader } from '../../../components/common/PageHeader';
+import { ErrorDisplay } from '../../../components/common/ErrorDisplay';
+import { SearchBar } from '../../../components/common/SearchBar';
+import { DataStateDisplay } from '../../../components/common/DataStateDisplay';
 
 interface ServiceProvidersPageProps {
   subCategoryId: string;
@@ -42,6 +44,7 @@ export const ServiceProvidersPage: React.FC<ServiceProvidersPageProps> = ({
   onBack,
   mainCategoryId: initialMainCategoryId,
 }) => {
+  // State
   const [searchQuery, setSearchQuery] = useState('');
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [updateModalOpen, setUpdateModalOpen] = useState(false);
@@ -49,56 +52,21 @@ export const ServiceProvidersPage: React.FC<ServiceProvidersPageProps> = ({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [providerToDelete, setProviderToDelete] = useState<string | null>(null);
 
-  // Navigation State
+  // Navigation / Filter State
   const [currentCategoryId, setCurrentCategoryId] = useState<string>(initialMainCategoryId || '');
   const [currentSubCategoryId, setCurrentSubCategoryId] = useState<string>(initialSubCategoryId);
-  const [categories, setCategories] = useState<IMainCategory[]>([]);
-  const [subCategories, setSubCategories] = useState<ISubCategory[]>([]);
 
-  // Fetch Categories
-  useEffect(() => {
-    const fetchCats = async () => {
-      try {
-        const res = await getCategories();
-        if (res.data?.success && Array.isArray(res.data.data?.categories)) {
-          setCategories(res.data.data.categories);
-        }
-      } catch (error) {
-        console.error('Error fetching categories:', error);
-      }
-    };
-    fetchCats();
-  }, []);
+  // Hooks
+  const { data: categories = [] } = useCategories();
+  const { data: subCategories = [] } = useSubCategories(currentCategoryId);
+  const { data, isLoading, error } = useServiceProviders(currentSubCategoryId);
+  const deleteMutation = useDeleteServiceProvider(currentSubCategoryId);
 
-  // Fetch SubCategories when Category changes
-  useEffect(() => {
-    const fetchSubCats = async () => {
-      if (!currentCategoryId) {
-        setSubCategories([]);
-        return;
-      }
-      try {
-        const res = await getSubCategories(currentCategoryId);
-        if (res.data?.success && Array.isArray(res.data.data?.subCategories)) {
-          setSubCategories(res.data.data.subCategories);
-        }
-      } catch (error) {
-        console.error('Error fetching sub-categories:', error);
-        setSubCategories([]);
-      }
-    };
-    fetchSubCats();
-  }, [currentCategoryId]);
-
-  // Update logic when props change (if user navigates from sidebar while on this page)
+  // Sync props to state if they change
   useEffect(() => {
     if (initialMainCategoryId) setCurrentCategoryId(initialMainCategoryId);
     if (initialSubCategoryId) setCurrentSubCategoryId(initialSubCategoryId);
   }, [initialMainCategoryId, initialSubCategoryId]);
-
-
-  const { data, isLoading, error } = useServiceProviders(currentSubCategoryId);
-  const deleteMutation = useDeleteServiceProvider(currentSubCategoryId);
 
   const serviceProviders = data?.data?.serviceProviders || [];
   const filteredProviders = serviceProviders.filter(
@@ -129,93 +97,33 @@ export const ServiceProvidersPage: React.FC<ServiceProvidersPageProps> = ({
     }
   };
 
+  const fetchError = error instanceof Error ? error.message : (error ? 'Failed to fetch service providers' : null);
+
   return (
     <Box sx={{ width: '100%', minHeight: '100vh', px: 4, py: 2 }}>
       <Box sx={{ width: '100%', maxWidth: '1600px', mx: 'auto' }}>
-        <Paper
-          elevation={0}
-          sx={{
-            p: 4,
-            mb: 4,
-            borderRadius: 3,
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white',
-            position: 'relative',
-            overflow: 'hidden',
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'rgba(255,255,255,0.1)',
-              backdropFilter: 'blur(10px)',
-            },
-          }}
-        >
-          <Box sx={{ position: 'relative', zIndex: 1 }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
-              <Box display="flex" alignItems="center" gap={2}>
-                <IconButton
-                  onClick={onBack}
-                  sx={{
-                    color: 'white',
-                    backgroundColor: 'rgba(255,255,255,0.2)',
-                    '&:hover': {
-                      backgroundColor: 'rgba(255,255,255,0.3)',
-                    },
-                  }}
-                >
-                  <ArrowBackIcon />
-                </IconButton>
-                <Box>
-                  <Typography variant="h4" fontWeight="700" gutterBottom>
-                    Service Providers
-                  </Typography>
-                  <Typography variant="subtitle1" sx={{ opacity: 0.9 }}>
-                    Find and manage professional service providers
-                  </Typography>
-                </Box>
-              </Box>
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                size="large"
-                onClick={() => setCreateModalOpen(true)}
-                sx={{
-                  borderRadius: 3,
-                  backgroundColor: 'rgba(255,255,255,0.2)',
-                  backdropFilter: 'blur(10px)',
-                  color: 'white',
-                  border: '1px solid rgba(255,255,255,0.3)',
-                  '&:hover': {
-                    backgroundColor: 'rgba(255,255,255,0.3)',
-                  },
-                }}
-              >
-                Add Provider
-              </Button>
-            </Box>
-          </Box>
-        </Paper>
+        <PageHeader
+          title="Service Providers"
+          subtitle="Find and manage professional service providers"
+          actionButtonText="Add Provider"
+          onAction={() => setCreateModalOpen(true)}
+          icon={
+            <IconButton
+              onClick={onBack}
+              sx={{
+                color: 'white',
+                backgroundColor: 'rgba(255,255,255,0.2)',
+                '&:hover': {
+                  backgroundColor: 'rgba(255,255,255,0.3)',
+                },
+              }}
+            >
+              <ArrowBackIcon />
+            </IconButton>
+          }
+        />
 
-        {error && (
-          <Paper
-            elevation={1}
-            sx={{
-              p: 2,
-              mb: 3,
-              borderRadius: 2,
-              backgroundColor: '#ffebee',
-              border: '1px solid #f44336',
-            }}
-          >
-            <Typography color="error" variant="body2">
-              {error instanceof Error ? error.message : 'Failed to fetch service providers'}
-            </Typography>
-          </Paper>
-        )}
+        <ErrorDisplay error={fetchError} />
 
         {/* Filters Section */}
         <Paper elevation={1} sx={{ p: 3, mb: 4, borderRadius: 3, backgroundColor: alpha('#f5f5f5', 0.5) }}>
@@ -259,24 +167,10 @@ export const ServiceProvidersPage: React.FC<ServiceProvidersPageProps> = ({
                 </Select>
               </FormControl>
             </Box>
-            <TextField
-              fullWidth
-              placeholder="Search providers by name or bio..."
+            <SearchBar
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon color="action" />
-                  </InputAdornment>
-                ),
-              }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 3,
-                  backgroundColor: 'white',
-                },
-              }}
+              onChange={setSearchQuery}
+              placeholder="Search providers by name or bio..."
             />
           </Box>
         </Paper>
@@ -290,42 +184,24 @@ export const ServiceProvidersPage: React.FC<ServiceProvidersPageProps> = ({
           </Box>
         )}
 
-        {isLoading ? (
-          <Box display="flex" justifyContent="center" py={8}>
-            <CircularProgress size={60} />
-          </Box>
-        ) : filteredProviders.length > 0 ? (
+        <DataStateDisplay
+          loading={isLoading}
+          empty={filteredProviders.length === 0}
+          emptyIcon={<PeopleIcon />}
+          emptyTitle="No service providers found"
+          emptyMessage={
+            searchQuery
+              ? `No providers match your search for "${searchQuery}"`
+              : 'Start by adding a service provider'
+          }
+          onClearSearch={searchQuery ? () => setSearchQuery('') : undefined}
+        >
           <ServiceProviderList
             providers={filteredProviders}
             onEdit={handleEdit}
             onDelete={handleDeleteClick}
           />
-        ) : (
-          <Paper
-            elevation={0}
-            sx={{
-              p: 8,
-              textAlign: 'center',
-              borderRadius: 3,
-              backgroundColor: alpha('#f5f5f5', 0.5),
-            }}
-          >
-            <PersonIcon sx={{ fontSize: 80, color: 'text.disabled', mb: 2 }} />
-            <Typography variant="h6" color="text.secondary" gutterBottom>
-              No service providers found
-            </Typography>
-            <Typography variant="body2" color="text.secondary" mb={3}>
-              {searchQuery
-                ? `No providers match your search for "${searchQuery}"`
-                : 'Start by adding a service provider'}
-            </Typography>
-            {searchQuery && (
-              <Button variant="outlined" onClick={() => setSearchQuery('')} sx={{ borderRadius: 2 }}>
-                Clear Search
-              </Button>
-            )}
-          </Paper>
-        )}
+        </DataStateDisplay>
 
         <CreateServiceProviderModal
           open={createModalOpen}
@@ -367,4 +243,3 @@ export const ServiceProvidersPage: React.FC<ServiceProvidersPageProps> = ({
     </Box>
   );
 };
-
