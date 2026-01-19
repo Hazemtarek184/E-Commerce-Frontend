@@ -7,6 +7,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import dayjs from 'dayjs';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import { useTranslation } from 'react-i18next';
 import { FormSection } from './FormSection';
 
 interface BasicInfoSectionProps {
@@ -14,10 +15,11 @@ interface BasicInfoSectionProps {
 }
 
 export const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ form }) => {
+  const { t } = useTranslation();
   const { control, formState: { errors } } = form;
 
   return (
-    <FormSection title="Basic Information" required icon={<InfoOutlinedIcon fontSize="small" />}>
+    <FormSection title={t('forms.basic_info.title')} required icon={<InfoOutlinedIcon fontSize="small" />}>
       <Stack spacing={2.5}>
         <Controller
           name="name"
@@ -25,10 +27,10 @@ export const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ form }) => {
           render={({ field }) => (
             <TextField
               {...field}
-              label="Name"
+              label={t('forms.basic_info.english_name')} // Using generic name key mapping
               fullWidth
               size="small"
-              placeholder="Enter service provider name"
+              placeholder={t('forms.basic_info.english_name')}
               error={!!errors.name}
               helperText={errors.name?.message as string}
             />
@@ -41,12 +43,12 @@ export const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ form }) => {
           render={({ field }) => (
             <TextField
               {...field}
-              label="Bio"
+              label={t('forms.basic_info.english_description')} // Using generic desc mapping
               fullWidth
               size="small"
               multiline
               rows={3}
-              placeholder="Describe the service provider..."
+              placeholder={t('forms.basic_info.english_description')}
               error={!!errors.bio}
               helperText={errors.bio?.message as string}
             />
@@ -60,7 +62,7 @@ export const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ form }) => {
               control={control}
               render={({ field }) => (
                 <TimePicker
-                  label="Opening Hour"
+                  label={t('forms.working_days.start_time')}
                   value={field.value ? dayjs(field.value, 'HH:mm') : null}
                   onChange={(newValue) => {
                     field.onChange(newValue ? newValue.format('HH:mm') : '');
@@ -81,7 +83,7 @@ export const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ form }) => {
               control={control}
               render={({ field }) => (
                 <TimePicker
-                  label="Closing Hour"
+                  label={t('forms.working_days.end_time')}
                   value={field.value ? dayjs(field.value, 'HH:mm') : null}
                   onChange={(newValue) => {
                     field.onChange(newValue ? newValue.format('HH:mm') : '');

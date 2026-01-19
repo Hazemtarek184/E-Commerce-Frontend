@@ -5,6 +5,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import { useFieldArray, Controller } from 'react-hook-form';
 import type { UseFormReturn } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { FormSection } from './FormSection';
 
 interface OffersSectionProps {
@@ -12,6 +13,7 @@ interface OffersSectionProps {
 }
 
 export const OffersSection: React.FC<OffersSectionProps> = ({ form }) => {
+  const { t } = useTranslation();
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: 'offers',
@@ -21,7 +23,7 @@ export const OffersSection: React.FC<OffersSectionProps> = ({ form }) => {
 
   return (
     <FormSection
-      title="Offers"
+      title={t('forms.offers.title')}
       icon={<LocalOfferIcon fontSize="small" />}
       action={
         <Button
@@ -29,13 +31,13 @@ export const OffersSection: React.FC<OffersSectionProps> = ({ form }) => {
           startIcon={<AddIcon />}
           onClick={() => append({ name: '', description: '', imageUrl: [] })}
         >
-          Add Offer
+          {t('forms.offers.add_offer')}
         </Button>
       }
     >
       {fields.length === 0 ? (
         <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
-          No offers added yet. Click "Add Offer" to create one.
+          {t('common.no_results')}
         </Typography>
       ) : (
         <Stack spacing={2}>
@@ -53,7 +55,7 @@ export const OffersSection: React.FC<OffersSectionProps> = ({ form }) => {
               <Stack spacing={2}>
                 <Box display="flex" justifyContent="space-between" alignItems="flex-start">
                   <Typography variant="caption" color="text.secondary" fontWeight={500}>
-                    Offer #{index + 1}
+                    {t('forms.offers.title')} #{index + 1}
                   </Typography>
                   <IconButton
                     onClick={() => remove(index)}
@@ -75,7 +77,7 @@ export const OffersSection: React.FC<OffersSectionProps> = ({ form }) => {
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      label="Offer Name"
+                      label={t('forms.offers.offer_title_en')}
                       fullWidth
                       size="small"
                       placeholder="e.g., 20% Off Summer Sale"
@@ -90,7 +92,7 @@ export const OffersSection: React.FC<OffersSectionProps> = ({ form }) => {
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      label="Offer Description"
+                      label={t('forms.offers.description_en')}
                       fullWidth
                       size="small"
                       multiline

@@ -18,6 +18,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CategoryIcon from '@mui/icons-material/Category';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import { useTranslation } from 'react-i18next';
 
 import type { IMainCategory } from '../interfaces';
 import { useCategories, useCategoryMutations } from '../hooks/useCategories';
@@ -31,6 +32,7 @@ interface Props {
 }
 
 const Categories: React.FC<Props> = ({ onSelectCategory }) => {
+  const { t } = useTranslation();
   const { data: categories = [], isLoading, error: queryError } = useCategories();
   const { create, update, remove } = useCategoryMutations();
 
@@ -74,7 +76,7 @@ const Categories: React.FC<Props> = ({ onSelectCategory }) => {
   };
 
   const handleDelete = async (categoryId: string) => {
-    if (!window.confirm('Delete this category?')) return;
+    if (!window.confirm(t('categories.delete_confirmation'))) return;
     await remove.mutateAsync(categoryId);
   };
 
@@ -87,10 +89,10 @@ const Categories: React.FC<Props> = ({ onSelectCategory }) => {
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
       <PageHeader
-        title="Categories"
-        subtitle="Manage your main service categories"
+        title={t('categories.title')}
+        subtitle={t('categories.subtitle')}
         icon={<CategoryIcon />}
-        actionButtonText="Add Category"
+        actionButtonText={t('categories.add_category')}
         onAction={() => handleOpenDialog()}
       />
 
@@ -101,7 +103,7 @@ const Categories: React.FC<Props> = ({ onSelectCategory }) => {
           <SearchBar
             value={searchQuery}
             onChange={setSearchQuery}
-            placeholder="Search categories..."
+            placeholder={t('categories.search_placeholder')}
           />
         </Box>
 
@@ -109,11 +111,11 @@ const Categories: React.FC<Props> = ({ onSelectCategory }) => {
           loading={isLoading}
           empty={filteredCategories.length === 0}
           emptyIcon={<CategoryIcon />}
-          emptyTitle="No categories found"
+          emptyTitle={t('categories.no_categories')}
           emptyMessage={
             searchQuery
-              ? `No categories match "${searchQuery}"`
-              : 'Get started by adding a category'
+              ? t('categories.no_categories_match', { query: searchQuery })
+              : t('categories.get_started')
           }
           onClearSearch={searchQuery ? () => setSearchQuery('') : undefined}
         >
@@ -211,7 +213,7 @@ const Categories: React.FC<Props> = ({ onSelectCategory }) => {
 
                   <Box display="flex" justifyContent="space-between" alignItems="center" mt={2}>
                     <Chip
-                      label={`${cat.subCategoryCount ?? cat.subCategories?.length ?? 0} subcategories`}
+                      label={t('categories.subcategories_count', { count: cat.subCategoryCount ?? cat.subCategories?.length ?? 0 })}
                       size="small"
                       sx={{ bgcolor: alpha('#6366f1', 0.1), color: 'primary.main' }}
                     />
@@ -227,38 +229,38 @@ const Categories: React.FC<Props> = ({ onSelectCategory }) => {
       {/* Dialog */}
       <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ pb: 1 }}>
-          {editCategory ? 'Edit Category' : 'Add Category'}
+          {editCategory ? t('categories.edit_category') : t('categories.add_category')}
         </DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, pt: 2 }}>
             <TextField
               autoFocus
-              label="English Name"
+              label={t('categories.english_name')}
               fullWidth
               value={englishName}
               onChange={(e) => setEnglishName(e.target.value)}
-              placeholder="Enter category name in English"
+              placeholder={t('categories.english_placeholder')}
             />
             <TextField
-              label="Arabic Name"
+              label={t('categories.arabic_name')}
               fullWidth
               value={arabicName}
               onChange={(e) => setArabicName(e.target.value)}
-              placeholder="أدخل اسم الفئة بالعربية"
+              placeholder={t('categories.arabic_placeholder')}
               dir="rtl"
             />
           </Box>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 3 }}>
           <Button onClick={handleCloseDialog} variant="outlined">
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             onClick={handleSave}
             variant="contained"
             disabled={!englishName || !arabicName || create.isPending || update.isPending}
           >
-            {create.isPending || update.isPending ? 'Saving...' : 'Save'}
+            {create.isPending || update.isPending ? t('common.saving') : t('common.save')}
           </Button>
         </DialogActions>
       </Dialog>

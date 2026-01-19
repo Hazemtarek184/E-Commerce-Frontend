@@ -1,5 +1,6 @@
 import React, { type ReactNode } from 'react';
 import { Box, Paper, Typography, Button, CircularProgress } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 
 interface DataStateDisplayProps {
   loading?: boolean;
@@ -16,11 +17,13 @@ export const DataStateDisplay: React.FC<DataStateDisplayProps> = ({
   loading,
   empty,
   emptyIcon,
-  emptyTitle = 'No items found',
+  emptyTitle,
   emptyMessage,
   onClearSearch,
   children,
 }) => {
+  const { t } = useTranslation();
+
   if (loading) {
     return (
       <Box
@@ -32,7 +35,7 @@ export const DataStateDisplay: React.FC<DataStateDisplayProps> = ({
       >
         <CircularProgress size={40} thickness={4} />
         <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-          Loading...
+          {t('common.loading')}
         </Typography>
       </Box>
     );
@@ -63,7 +66,7 @@ export const DataStateDisplay: React.FC<DataStateDisplayProps> = ({
           </Box>
         )}
         <Typography variant="h6" color="text.primary" gutterBottom fontWeight={500}>
-          {emptyTitle}
+          {emptyTitle || t('common.no_results')}
         </Typography>
         {emptyMessage && (
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3, maxWidth: 400, mx: 'auto' }}>
@@ -72,7 +75,7 @@ export const DataStateDisplay: React.FC<DataStateDisplayProps> = ({
         )}
         {onClearSearch && (
           <Button variant="outlined" onClick={onClearSearch} size="small">
-            Clear Search
+            {t('common.clear_search')}
           </Button>
         )}
       </Paper>

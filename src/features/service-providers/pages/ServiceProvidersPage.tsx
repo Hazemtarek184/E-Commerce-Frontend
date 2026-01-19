@@ -15,6 +15,7 @@ import {
 } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { useTranslation } from 'react-i18next';
 
 import { useServiceProviders } from '../queries';
 import { useDeleteServiceProvider } from '../mutations';
@@ -41,6 +42,7 @@ export const ServiceProvidersPage: React.FC<ServiceProvidersPageProps> = ({
   onBack,
   mainCategoryId: initialMainCategoryId,
 }) => {
+  const { t } = useTranslation();
   // State
   const [searchQuery, setSearchQuery] = useState('');
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -94,16 +96,16 @@ export const ServiceProvidersPage: React.FC<ServiceProvidersPageProps> = ({
     }
   };
 
-  const fetchError = error instanceof Error ? error.message : error ? 'Failed to fetch service providers' : null;
+  const fetchError = error instanceof Error ? error.message : error ? t('common.error') : null;
   const selectedSubCategory = subCategories.find((sub) => sub._id === currentSubCategoryId);
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
       <PageHeader
-        title="Service Providers"
-        subtitle={selectedSubCategory ? `In ${selectedSubCategory.englishName}` : 'Manage service providers'}
+        title={t('service_providers.title')}
+        subtitle={selectedSubCategory ? t('service_providers.in_subcategory', { subcategory: selectedSubCategory.englishName }) : t('service_providers.subtitle')}
         icon={<PeopleIcon />}
-        actionButtonText="Add Provider"
+        actionButtonText={t('service_providers.add_provider')}
         onAction={() => setCreateModalOpen(true)}
         backButton={
           <IconButton onClick={onBack} sx={{ mr: 1 }}>
@@ -128,13 +130,13 @@ export const ServiceProvidersPage: React.FC<ServiceProvidersPageProps> = ({
           <SearchBar
             value={searchQuery}
             onChange={setSearchQuery}
-            placeholder="Search providers..."
+            placeholder={t('service_providers.search_placeholder')}
           />
           <FormControl sx={{ minWidth: 180 }}>
-            <InputLabel>Category</InputLabel>
+            <InputLabel>{t('service_providers.filter_category')}</InputLabel>
             <Select
               value={currentCategoryId}
-              label="Category"
+              label={t('service_providers.filter_category')}
               onChange={(e) => {
                 setCurrentCategoryId(e.target.value);
                 setCurrentSubCategoryId('');
@@ -149,10 +151,10 @@ export const ServiceProvidersPage: React.FC<ServiceProvidersPageProps> = ({
             </Select>
           </FormControl>
           <FormControl sx={{ minWidth: 180 }} disabled={!currentCategoryId}>
-            <InputLabel>Sub-Category</InputLabel>
+            <InputLabel>{t('service_providers.filter_subcategory')}</InputLabel>
             <Select
               value={currentSubCategoryId}
-              label="Sub-Category"
+              label={t('service_providers.filter_subcategory')}
               onChange={(e) => setCurrentSubCategoryId(e.target.value)}
               sx={{ bgcolor: 'background.paper' }}
             >
@@ -165,23 +167,15 @@ export const ServiceProvidersPage: React.FC<ServiceProvidersPageProps> = ({
           </FormControl>
         </Box>
 
-        {/* Results count */}
-        {filteredProviders.length > 0 && (
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            {filteredProviders.length} provider{filteredProviders.length !== 1 ? 's' : ''} found
-            {searchQuery && ` for "${searchQuery}"`}
-          </Typography>
-        )}
-
         <DataStateDisplay
           loading={isLoading}
           empty={filteredProviders.length === 0}
           emptyIcon={<PeopleIcon />}
-          emptyTitle="No service providers found"
+          emptyTitle={t('service_providers.no_providers')}
           emptyMessage={
             searchQuery
-              ? `No providers match "${searchQuery}"`
-              : 'Start by adding a service provider'
+              ? t('service_providers.no_providers_match', { query: searchQuery })
+              : t('service_providers.no_in_subcategory')
           }
           onClearSearch={searchQuery ? () => setSearchQuery('') : undefined}
         >
@@ -214,15 +208,15 @@ export const ServiceProvidersPage: React.FC<ServiceProvidersPageProps> = ({
 
       {/* Delete Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Delete Service Provider</DialogTitle>
+        <DialogTitle>{t('service_providers.delete_confirmation')}</DialogTitle>
         <DialogContent>
           <Typography>
-            Are you sure you want to delete this provider? This action cannot be undone.
+            {t('common.confirm_delete')}
           </Typography>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button onClick={() => setDeleteDialogOpen(false)} variant="outlined">
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             onClick={handleDeleteConfirm}
@@ -230,7 +224,7 @@ export const ServiceProvidersPage: React.FC<ServiceProvidersPageProps> = ({
             variant="contained"
             disabled={deleteMutation.isPending}
           >
-            {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+            {deleteMutation.isPending ? t('common.loading') : t('common.delete')}
           </Button>
         </DialogActions>
       </Dialog>

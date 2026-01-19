@@ -19,20 +19,23 @@ import PeopleIcon from '@mui/icons-material/People';
 import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import { useTranslation } from 'react-i18next';
 import Categories from './components/Categories';
 import SubCategories from './components/SubCategories';
 import { ServiceProvidersPage } from './features/service-providers/pages/ServiceProvidersPage';
+import { SettingsToggle } from './components/SettingsToggle';
 
 const drawerWidth = 260;
 
 const navItems = [
-  { label: 'Categories', icon: <CategoryIcon />, id: 0 },
-  { label: 'Sub-categories', icon: <SubtitlesIcon />, id: 1 },
-  { label: 'Service Providers', icon: <PeopleIcon />, id: 2 },
+  { label: 'app.categories', icon: <CategoryIcon />, id: 0 },
+  { label: 'app.sub_categories', icon: <SubtitlesIcon />, id: 1 },
+  { label: 'app.service_providers', icon: <PeopleIcon />, id: 2 },
 ];
 
 function App() {
   const theme = useTheme();
+  const { t } = useTranslation();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileOpen, setMobileOpen] = useState(false);
   const [selectedSection, setSelectedSection] = useState(0);
@@ -56,28 +59,31 @@ function App() {
           p: 3,
           display: 'flex',
           alignItems: 'center',
-          gap: 2,
+          justifyContent: 'space-between',
           borderBottom: '1px solid',
           borderColor: 'divider',
         }}
       >
-        <Avatar
-          sx={{
-            bgcolor: 'primary.main',
-            width: 40,
-            height: 40,
-          }}
-        >
-          <DashboardIcon />
-        </Avatar>
-        <Box>
-          <Typography variant="h6" fontWeight="700" color="text.primary">
-            Dashboard
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Admin Panel
-          </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Avatar
+            sx={{
+              bgcolor: 'primary.main',
+              width: 40,
+              height: 40,
+            }}
+          >
+            <DashboardIcon />
+          </Avatar>
+          <Box>
+            <Typography variant="h6" fontWeight="700" color="text.primary">
+              {t('app.title')}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {t('app.subtitle')}
+            </Typography>
+          </Box>
         </Box>
+        <SettingsToggle />
       </Box>
 
       {/* Navigation */}
@@ -86,7 +92,7 @@ function App() {
           variant="overline"
           sx={{ px: 2, mb: 1, display: 'block', color: 'text.secondary', fontWeight: 600 }}
         >
-          Navigation
+          {t('app.navigation')}
         </Typography>
         <List disablePadding>
           {navItems.map((item) => (
@@ -118,7 +124,7 @@ function App() {
                   {item.icon}
                 </ListItemIcon>
                 <ListItemText
-                  primary={item.label}
+                  primary={t(item.label)}
                   primaryTypographyProps={{ fontWeight: 500, fontSize: '0.9rem' }}
                 />
               </ListItemButton>

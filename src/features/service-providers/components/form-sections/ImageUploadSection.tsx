@@ -5,6 +5,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ImageIcon from '@mui/icons-material/Image';
 import type { UseFormReturn } from 'react-hook-form';
 import imageCompression from 'browser-image-compression';
+import { useTranslation } from 'react-i18next';
 import { FormSection } from './FormSection';
 
 interface ImageUploadSectionProps {
@@ -19,6 +20,7 @@ export const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
   defaultImages = [],
   onDeleteExisting
 }) => {
+  const { t } = useTranslation();
   const [existingImages, setExistingImages] = useState(defaultImages);
   const [newImages, setNewImages] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
@@ -86,7 +88,7 @@ export const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
   const totalImages = existingImages.length + previewUrls.length;
 
   return (
-    <FormSection title="Images" icon={<ImageIcon fontSize="small" />}>
+    <FormSection title={t('forms.basic_info.cover_image')} icon={<ImageIcon fontSize="small" />}>
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
         {existingImages.map((img) => (
           <Box
@@ -201,7 +203,7 @@ export const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
             <>
               <AddPhotoAlternateIcon fontSize="small" color="action" />
               <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
-                Add
+                {t('common.add')}
               </Typography>
             </>
           )}
@@ -210,7 +212,7 @@ export const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
 
       {totalImages > 0 && (
         <Typography variant="caption" color="text.secondary" sx={{ mt: 1.5, display: 'block' }}>
-          {totalImages} image{totalImages !== 1 ? 's' : ''} selected
+          {totalImages} {t('forms.basic_info.cover_image')} selected
         </Typography>
       )}
 

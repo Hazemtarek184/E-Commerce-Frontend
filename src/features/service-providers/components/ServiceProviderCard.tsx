@@ -18,6 +18,7 @@ import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import StarIcon from "@mui/icons-material/Star";
 import type { IServiceProvider } from "../../../interfaces";
+import { useTranslation } from "react-i18next";
 
 interface ServiceProviderCardProps {
   provider: IServiceProvider;
@@ -39,6 +40,7 @@ export const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({
   onEdit,
   onDelete,
 }) => {
+  const { t } = useTranslation();
   const hasImages = provider.imagesUrl && provider.imagesUrl.length > 0;
 
   return (
@@ -76,7 +78,7 @@ export const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({
           {provider.isVerified && (
             <Chip
               icon={<VerifiedIcon sx={{ fontSize: 14 }} />}
-              label="Verified"
+              label={t('common.verified')}
               size="small"
               sx={{
                 position: "absolute",
@@ -199,7 +201,7 @@ export const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({
             </Typography>
             {provider.completedJobs !== undefined && (
               <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
-                ({provider.completedJobs} jobs)
+                ({provider.completedJobs} {t('service_providers.jobs')})
               </Typography>
             )}
           </Box>

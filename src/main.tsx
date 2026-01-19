@@ -1,11 +1,12 @@
-import { StrictMode } from 'react'
+import { StrictMode, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ThemeProvider } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
-import theme from './theme'
+import { CircularProgress, Box } from '@mui/material'
 import './index.css'
 import App from './App.tsx'
+import './i18n/config'
+import { AppThemeProvider } from './context/ThemeContext'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,11 +19,17 @@ const queryClient = new QueryClient({
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <App />
-      </ThemeProvider>
-    </QueryClientProvider>
+    <Suspense fallback={
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    }>
+      <QueryClientProvider client={queryClient}>
+        <AppThemeProvider>
+          <CssBaseline />
+          <App />
+        </AppThemeProvider>
+      </QueryClientProvider>
+    </Suspense>
   </StrictMode>,
 )

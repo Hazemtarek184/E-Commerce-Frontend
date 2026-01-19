@@ -5,6 +5,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import PhoneIcon from '@mui/icons-material/Phone';
 import { useFieldArray, Controller } from 'react-hook-form';
 import type { UseFormReturn } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { FormSection } from './FormSection';
 
 interface ContactInfoSectionProps {
@@ -12,6 +13,7 @@ interface ContactInfoSectionProps {
 }
 
 export const ContactInfoSection: React.FC<ContactInfoSectionProps> = ({ form }) => {
+  const { t } = useTranslation();
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: 'phoneContacts',
@@ -21,7 +23,7 @@ export const ContactInfoSection: React.FC<ContactInfoSectionProps> = ({ form }) 
 
   return (
     <FormSection
-      title="Contact Information"
+      title={t('forms.contact_info.title')}
       required
       icon={<PhoneIcon fontSize="small" />}
       action={
@@ -30,7 +32,7 @@ export const ContactInfoSection: React.FC<ContactInfoSectionProps> = ({ form }) 
           startIcon={<AddIcon />}
           onClick={() => append({ phoneNumber: '', hasWhatsApp: false, canCall: true })}
         >
-          Add Contact
+          {t('common.add')}
         </Button>
       }
     >
@@ -53,7 +55,7 @@ export const ContactInfoSection: React.FC<ContactInfoSectionProps> = ({ form }) 
                 render={({ field }) => (
                   <TextField
                     {...field}
-                    label="Phone Number"
+                    label={t('forms.contact_info.phone')}
                     type="tel"
                     fullWidth
                     size="small"
@@ -73,15 +75,15 @@ export const ContactInfoSection: React.FC<ContactInfoSectionProps> = ({ form }) 
                   control={form.control}
                   render={({ field }) => (
                     <FormControl fullWidth size="small">
-                      <InputLabel>WhatsApp</InputLabel>
+                      <InputLabel>{t('forms.contact_info.whatsapp')}</InputLabel>
                       <Select
                         {...field}
                         value={field.value ? 'yes' : 'no'}
                         onChange={(e) => field.onChange(e.target.value === 'yes')}
-                        label="WhatsApp"
+                        label={t('forms.contact_info.whatsapp')}
                       >
-                        <MenuItem value="yes">Yes</MenuItem>
-                        <MenuItem value="no">No</MenuItem>
+                        <MenuItem value="yes">{t('common.yes')}</MenuItem>
+                        <MenuItem value="no">{t('common.no')}</MenuItem>
                       </Select>
                     </FormControl>
                   )}
@@ -91,15 +93,15 @@ export const ContactInfoSection: React.FC<ContactInfoSectionProps> = ({ form }) 
                   control={form.control}
                   render={({ field }) => (
                     <FormControl fullWidth size="small">
-                      <InputLabel>Can Call</InputLabel>
+                      <InputLabel>{t('forms.contact_info.can_call')}</InputLabel>
                       <Select
                         {...field}
                         value={field.value ? 'yes' : 'no'}
                         onChange={(e) => field.onChange(e.target.value === 'yes')}
-                        label="Can Call"
+                        label={t('forms.contact_info.can_call')}
                       >
-                        <MenuItem value="yes">Yes</MenuItem>
-                        <MenuItem value="no">No</MenuItem>
+                        <MenuItem value="yes">{t('common.yes')}</MenuItem>
+                        <MenuItem value="no">{t('common.no')}</MenuItem>
                       </Select>
                     </FormControl>
                   )}

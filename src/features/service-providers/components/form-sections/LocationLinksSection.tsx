@@ -5,6 +5,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import { useFieldArray, Controller } from 'react-hook-form';
 import type { UseFormReturn } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { FormSection } from './FormSection';
 
 interface LocationLinksSectionProps {
@@ -12,6 +13,7 @@ interface LocationLinksSectionProps {
 }
 
 export const LocationLinksSection: React.FC<LocationLinksSectionProps> = ({ form }) => {
+  const { t } = useTranslation();
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: 'locationLinks',
@@ -21,7 +23,7 @@ export const LocationLinksSection: React.FC<LocationLinksSectionProps> = ({ form
 
   return (
     <FormSection
-      title="Location Links"
+      title={t('forms.location.title')}
       required
       icon={<LocationOnIcon fontSize="small" />}
       action={
@@ -30,7 +32,7 @@ export const LocationLinksSection: React.FC<LocationLinksSectionProps> = ({ form
           startIcon={<AddIcon />}
           onClick={() => append('')}
         >
-          Add Location
+          {t('common.add')}
         </Button>
       }
     >
@@ -43,7 +45,7 @@ export const LocationLinksSection: React.FC<LocationLinksSectionProps> = ({ form
               <TextField
                 {...controllerField}
                 value={controllerField.value ?? ''}
-                label={`Location ${index + 1}`}
+                label={`${t('forms.location.address')} ${index + 1}`}
                 placeholder="https://maps.google.com/..."
                 fullWidth
                 size="small"

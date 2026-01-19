@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
+import { useTranslation } from "react-i18next";
 import { ServiceProviderForm } from "./ServiceProviderForm";
 import { useUpdateServiceProvider } from "../mutations";
 import type { UpdateServiceProviderInput } from "../schemas";
@@ -25,6 +26,7 @@ interface UpdateServiceProviderModalProps {
 export const UpdateServiceProviderModal: React.FC<
   UpdateServiceProviderModalProps
 > = ({ open, onClose, serviceProvider, subCategoryId }) => {
+  const { t } = useTranslation();
   const updateMutation = useUpdateServiceProvider(subCategoryId);
 
   const handleSubmit = async (data: UpdateServiceProviderInput) => {
@@ -76,7 +78,7 @@ export const UpdateServiceProviderModal: React.FC<
           </Box>
           <Box>
             <Typography variant="h6" component="span" fontWeight={600}>
-              Edit Service Provider
+              {t('service_providers.edit_provider')}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Update {serviceProvider.name}

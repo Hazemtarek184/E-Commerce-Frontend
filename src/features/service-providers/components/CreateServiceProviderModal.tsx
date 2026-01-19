@@ -15,6 +15,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import AddBusinessIcon from '@mui/icons-material/AddBusiness';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ServiceProviderForm } from './ServiceProviderForm';
 import { useCreateServiceProvider } from '../mutations';
 import type { CreateServiceProviderInput } from '../schemas';
@@ -34,6 +35,7 @@ export const CreateServiceProviderModal: React.FC<CreateServiceProviderModalProp
   subCategoryId: initialSubCategoryId,
   mainCategoryId: initialMainCategoryId,
 }) => {
+  const { t } = useTranslation();
   const createMutation = useCreateServiceProvider();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>(initialMainCategoryId || '');
   const [selectedSubCategoryId, setSelectedSubCategoryId] = useState<string>(initialSubCategoryId || '');
@@ -90,10 +92,10 @@ export const CreateServiceProviderModal: React.FC<CreateServiceProviderModalProp
           </Box>
           <Box>
             <Typography variant="h6" component="span" fontWeight={600}>
-              Add Service Provider
+              {t('service_providers.add_provider')}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Create a new service provider listing
+              {t('service_providers.create_subtitle')}
             </Typography>
           </Box>
         </Stack>
@@ -115,10 +117,10 @@ export const CreateServiceProviderModal: React.FC<CreateServiceProviderModalProp
       <DialogContent sx={{ pt: 3, mt: 1 }}>
         <Box sx={{ display: 'flex', gap: 2, mb: 3, mt: 1 }}>
           <FormControl fullWidth size="small">
-            <InputLabel>Category</InputLabel>
+            <InputLabel>{t('service_providers.filter_category')}</InputLabel>
             <Select
               value={selectedCategoryId}
-              label="Category"
+              label={t('service_providers.filter_category')}
               onChange={(e) => {
                 setSelectedCategoryId(e.target.value);
                 setSelectedSubCategoryId('');
@@ -133,10 +135,10 @@ export const CreateServiceProviderModal: React.FC<CreateServiceProviderModalProp
           </FormControl>
 
           <FormControl fullWidth size="small" disabled={!selectedCategoryId || subCategoriesLoading}>
-            <InputLabel>Sub-Category</InputLabel>
+            <InputLabel>{t('service_providers.filter_subcategory')}</InputLabel>
             <Select
               value={selectedSubCategoryId}
-              label="Sub-Category"
+              label={t('service_providers.filter_subcategory')}
               onChange={(e) => setSelectedSubCategoryId(e.target.value)}
             >
               {subCategories.map((sub) => (

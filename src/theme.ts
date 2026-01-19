@@ -1,12 +1,14 @@
 import { createTheme, alpha } from '@mui/material/styles';
+import type { ThemeOptions, PaletteMode, Direction } from '@mui/material/styles';
 
 // Modern, clean color palette
 const primaryColor = '#6366f1'; // Indigo
 const secondaryColor = '#8b5cf6'; // Violet
 
-export const theme = createTheme({
+const getDesignTokens = (mode: PaletteMode, direction: Direction): ThemeOptions => ({
+  direction,
   palette: {
-    mode: 'light',
+    mode,
     primary: {
       main: primaryColor,
       light: '#818cf8',
@@ -18,15 +20,31 @@ export const theme = createTheme({
       light: '#a78bfa',
       dark: '#7c3aed',
     },
-    background: {
-      default: '#f8fafc',
-      paper: '#ffffff',
-    },
-    text: {
-      primary: '#1e293b',
-      secondary: '#64748b',
-    },
-    divider: '#e2e8f0',
+    ...(mode === 'light'
+      ? {
+          // Light mode specific
+          background: {
+            default: '#f8fafc',
+            paper: '#ffffff',
+          },
+          text: {
+            primary: '#1e293b',
+            secondary: '#64748b',
+          },
+          divider: '#e2e8f0',
+        }
+      : {
+          // Dark mode specific
+          background: {
+            default: '#0f172a', // Slate 900
+            paper: '#1e293b',   // Slate 800
+          },
+          text: {
+            primary: '#f8fafc', // Slate 50
+            secondary: '#94a3b8', // Slate 400
+          },
+          divider: '#334155', // Slate 700
+        }),
     error: {
       main: '#ef4444',
       light: '#fca5a5',
@@ -73,12 +91,24 @@ export const theme = createTheme({
   },
   shadows: [
     'none',
-    '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-    '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
-    '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-    '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
-    '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
-    '0 25px 50px -12px rgb(0 0 0 / 0.25)',
+    mode === 'light'
+      ? '0 1px 2px 0 rgb(0 0 0 / 0.05)'
+      : '0 1px 2px 0 rgb(0 0 0 / 0.3)',
+    mode === 'light'
+      ? '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)'
+      : '0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3)',
+    mode === 'light'
+      ? '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)'
+      : '0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3)',
+    mode === 'light'
+      ? '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)'
+      : '0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3)',
+    mode === 'light'
+      ? '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)'
+      : '0 20px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.3)',
+    mode === 'light'
+      ? '0 25px 50px -12px rgb(0 0 0 / 0.25)'
+      : '0 25px 50px -12px rgb(0 0 0 / 0.5)',
     ...Array(18).fill('none'),
   ] as any,
   components: {
@@ -91,7 +121,7 @@ export const theme = createTheme({
             height: '8px',
           },
           '&::-webkit-scrollbar-thumb': {
-            backgroundColor: '#cbd5e1',
+            backgroundColor: mode === 'light' ? '#cbd5e1' : '#475569',
             borderRadius: '4px',
           },
         },
@@ -107,7 +137,9 @@ export const theme = createTheme({
         contained: {
           boxShadow: 'none',
           '&:hover': {
-            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+            boxShadow: mode === 'light' 
+              ? '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+              : '0 4px 6px -1px rgb(0 0 0 / 0.3)',
           },
         },
       },
@@ -116,8 +148,10 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 16,
-          boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
-          border: '1px solid #f1f5f9',
+          boxShadow: mode === 'light'
+            ? '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)'
+            : '0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3)',
+          border: mode === 'light' ? '1px solid #f1f5f9' : '1px solid #334155',
         },
       },
     },
@@ -132,14 +166,16 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           backgroundImage: 'none',
-          boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
+          boxShadow: mode === 'light'
+            ? '0 1px 3px 0 rgb(0 0 0 / 0.1)'
+            : '0 1px 3px 0 rgb(0 0 0 / 0.3)',
         },
       },
     },
     MuiDrawer: {
       styleOverrides: {
         paper: {
-          borderRight: '1px solid #e2e8f0',
+          borderRight: mode === 'light' ? '1px solid #e2e8f0' : '1px solid #334155',
         },
       },
     },
@@ -191,4 +227,4 @@ export const theme = createTheme({
   },
 });
 
-export default theme;
+export const getTheme = (mode: PaletteMode, direction: Direction = 'ltr') => createTheme(getDesignTokens(mode, direction));

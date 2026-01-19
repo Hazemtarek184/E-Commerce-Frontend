@@ -23,6 +23,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import FolderIcon from '@mui/icons-material/Folder';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import { useTranslation } from 'react-i18next';
 
 import type { ISubCategory } from '../interfaces';
 import { useSubCategories, useSubCategoryMutations } from '../hooks/useSubCategories';
@@ -39,6 +40,7 @@ interface Props {
 }
 
 const SubCategories: React.FC<Props> = ({ mainCategoryId, onSelectSubCategory, onBack }) => {
+  const { t } = useTranslation();
   // State
   const [selectedCategoryId, setSelectedCategoryId] = useState(mainCategoryId);
   const [searchQuery, setSearchQuery] = useState('');
@@ -93,7 +95,7 @@ const SubCategories: React.FC<Props> = ({ mainCategoryId, onSelectSubCategory, o
   };
 
   const handleDelete = async (subCategoryId: string) => {
-    if (!window.confirm('Delete this sub-category?')) return;
+    if (!window.confirm(t('sub_categories.delete_confirmation'))) return;
     await remove.mutateAsync(subCategoryId);
   };
 
@@ -108,10 +110,10 @@ const SubCategories: React.FC<Props> = ({ mainCategoryId, onSelectSubCategory, o
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
       <PageHeader
-        title="Sub-Categories"
-        subtitle={selectedCategory ? `In ${selectedCategory.englishName}` : 'Manage sub-categories'}
+        title={t('sub_categories.title')}
+        subtitle={selectedCategory ? t('sub_categories.in_category', { category: selectedCategory.englishName }) : t('sub_categories.subtitle')}
         icon={<FolderIcon />}
-        actionButtonText="Add Sub-Category"
+        actionButtonText={t('sub_categories.add_subcategory')}
         onAction={() => handleOpenDialog()}
         backButton={
           <IconButton onClick={onBack} sx={{ mr: 1 }}>
@@ -135,13 +137,13 @@ const SubCategories: React.FC<Props> = ({ mainCategoryId, onSelectSubCategory, o
           <SearchBar
             value={searchQuery}
             onChange={setSearchQuery}
-            placeholder="Search sub-categories..."
+            placeholder={t('sub_categories.search_placeholder')}
           />
           <FormControl sx={{ minWidth: 200 }}>
-            <InputLabel>Category</InputLabel>
+            <InputLabel>{t('sub_categories.select_category')}</InputLabel>
             <Select
               value={selectedCategoryId || ''}
-              label="Category"
+              label={t('sub_categories.select_category')}
               onChange={(e) => setSelectedCategoryId(e.target.value)}
               sx={{ bgcolor: 'background.paper' }}
             >
@@ -158,13 +160,13 @@ const SubCategories: React.FC<Props> = ({ mainCategoryId, onSelectSubCategory, o
           loading={categoriesLoading || subCategoriesLoading}
           empty={filteredSubCategories.length === 0}
           emptyIcon={<FolderIcon />}
-          emptyTitle="No sub-categories found"
+          emptyTitle={t('sub_categories.no_subcategories')}
           emptyMessage={
             searchQuery
-              ? `No sub-categories match "${searchQuery}"`
+              ? t('sub_categories.no_subcategories_match', { query: searchQuery })
               : selectedCategoryId
-              ? 'No sub-categories in this category yet'
-              : 'Select a category to view sub-categories'
+              ? t('sub_categories.no_in_category')
+              : t('sub_categories.select_category_prompt')
           }
           onClearSearch={searchQuery ? () => setSearchQuery('') : undefined}
         >
@@ -278,15 +280,15 @@ const SubCategories: React.FC<Props> = ({ mainCategoryId, onSelectSubCategory, o
       {/* Dialog */}
       <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ pb: 1 }}>
-          {editSubCategory ? 'Edit Sub-Category' : 'Add Sub-Category'}
+          {editSubCategory ? t('sub_categories.edit_subcategory') : t('sub_categories.add_subcategory')}
         </DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, pt: 2 }}>
             <FormControl fullWidth required>
-              <InputLabel>Category</InputLabel>
+              <InputLabel>{t('sub_categories.select_category')}</InputLabel>
               <Select
                 value={dialogSelectedCategoryId}
-                label="Category"
+                label={t('sub_categories.select_category')}
                 onChange={(e) => setDialogSelectedCategoryId(e.target.value)}
                 disabled={!!editSubCategory}
               >
@@ -299,25 +301,25 @@ const SubCategories: React.FC<Props> = ({ mainCategoryId, onSelectSubCategory, o
             </FormControl>
             <TextField
               autoFocus
-              label="English Name"
+              label={t('sub_categories.english_name')}
               fullWidth
               value={englishName}
               onChange={(e) => setEnglishName(e.target.value)}
-              placeholder="Enter name in English"
+              placeholder={t('sub_categories.english_placeholder')}
             />
             <TextField
-              label="Arabic Name"
+              label={t('sub_categories.arabic_name')}
               fullWidth
               value={arabicName}
               onChange={(e) => setArabicName(e.target.value)}
-              placeholder="أدخل الاسم بالعربية"
+              placeholder={t('sub_categories.arabic_placeholder')}
               dir="rtl"
             />
           </Box>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 3 }}>
           <Button onClick={handleCloseDialog} variant="outlined">
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             onClick={handleSave}
@@ -330,7 +332,7 @@ const SubCategories: React.FC<Props> = ({ mainCategoryId, onSelectSubCategory, o
               !dialogSelectedCategoryId
             }
           >
-            {create.isPending || update.isPending ? 'Saving...' : 'Save'}
+            {create.isPending || update.isPending ? t('common.saving') : t('common.save')}
           </Button>
         </DialogActions>
       </Dialog>

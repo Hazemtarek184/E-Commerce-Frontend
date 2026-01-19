@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { Box, Button } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { createServiceProviderSchema, updateServiceProviderSchema } from '../schemas';
+import { getCreateServiceProviderSchema, getUpdateServiceProviderSchema } from '../schemas';
 import type { CreateServiceProviderInput, UpdateServiceProviderInput } from '../schemas';
 import type { IServiceProvider } from '../../../interfaces';
+import { useTranslation } from 'react-i18next';
 
 import { ImageUploadSection } from './form-sections/ImageUploadSection';
 import { BasicInfoSection } from './form-sections/BasicInfoSection';
@@ -38,6 +39,7 @@ export const ServiceProviderForm: React.FC<ServiceProviderFormProps> = ({
   isLoading = false,
   onCancel,
 }) => {
+  const { t } = useTranslation();
   const [deletedImageIds, setDeletedImageIds] = useState<string[]>([]);
 
   const normalizePhoneContacts = (
@@ -79,7 +81,7 @@ export const ServiceProviderForm: React.FC<ServiceProviderFormProps> = ({
   // We cast the hook to 'any' here because TS struggles with the union type of Create/Update input
   // but we know it's valid based on the schema and isEdit prop.
   const form = useForm<any>({
-    resolver: zodResolver(isEdit ? updateServiceProviderSchema : createServiceProviderSchema),
+    resolver: zodResolver(isEdit ? getUpdateServiceProviderSchema(t) : getCreateServiceProviderSchema(t)),
     defaultValues: { ...defaultFormValues, image: undefined },
   });
 
@@ -125,11 +127,11 @@ export const ServiceProviderForm: React.FC<ServiceProviderFormProps> = ({
       <Box display="flex" justifyContent="flex-end" gap={2} sx={{ mt: 2, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
         {onCancel && (
           <Button variant="outlined" onClick={onCancel} disabled={isLoading}>
-            Cancel
+            {t('common.cancel')}
           </Button>
         )}
         <Button type="submit" variant="contained" disabled={isLoading}>
-          {isLoading ? 'Saving...' : isEdit ? 'Update' : 'Create'}
+          {isLoading ? t('common.saving') : isEdit ? t('common.update') : t('common.create')}
         </Button>
       </Box>
     </Box>
