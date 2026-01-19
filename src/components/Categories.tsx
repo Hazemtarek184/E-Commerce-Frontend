@@ -211,7 +211,7 @@ const Categories: React.FC<Props> = ({ onSelectCategory }) => {
 
                   <Box display="flex" justifyContent="space-between" alignItems="center" mt={2}>
                     <Chip
-                      label={`${cat.subCategories?.length || 0} subcategories`}
+                      label={`${cat.subCategoryCount ?? cat.subCategories?.length ?? 0} subcategories`}
                       size="small"
                       sx={{ bgcolor: alpha('#6366f1', 0.1), color: 'primary.main' }}
                     />

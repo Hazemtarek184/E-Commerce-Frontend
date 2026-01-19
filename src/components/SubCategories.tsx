@@ -262,7 +262,7 @@ const SubCategories: React.FC<Props> = ({ mainCategoryId, onSelectSubCategory, o
 
                   <Box display="flex" justifyContent="space-between" alignItems="center" mt={2}>
                     <Chip
-                      label={`${subCategory.serviceProvider?.length || 0} providers`}
+                      label={`${subCategory.serviceProviderCount ?? subCategory.serviceProvider?.length ?? 0} providers`}
                       size="small"
                       sx={{ bgcolor: alpha('#8b5cf6', 0.1), color: 'secondary.main' }}
                     />

@@ -4,6 +4,7 @@ export interface IMainCategory {
     englishName: string;
     arabicName: string;
     subCategories?: string[]; // ObjectId as string
+    subCategoryCount?: number; // Alternative: count field from API
 }
 
 // Sub Category
@@ -12,6 +13,7 @@ export interface ISubCategory {
     englishName: string;
     arabicName: string;
     serviceProvider?: string[]; // ObjectId as string
+    serviceProviderCount?: number; // Alternative: count field from API
 }
 
 export interface IImageUrl {
