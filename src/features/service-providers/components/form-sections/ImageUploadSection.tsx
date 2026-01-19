@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Box, Typography, IconButton, CircularProgress } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
+import { Box, Typography, IconButton, CircularProgress, alpha } from '@mui/material';
+import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ImageIcon from '@mui/icons-material/Image';
 import type { UseFormReturn } from 'react-hook-form';
 import imageCompression from 'browser-image-compression';
+import { FormSection } from './FormSection';
 
 interface ImageUploadSectionProps {
   form: UseFormReturn<any>;
@@ -41,12 +43,9 @@ export const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
       
       try {
         const compressedFilesPromises = originalFiles.map(async (file) => {
-          // Configuration for compression
-          // Vercel limit is 4.5MB total. If 10 images, avg 0.45MB each.
-          // We target ~0.4MB per image to be safe.
           const options = {
             maxSizeMB: 0.4, 
-            maxWidthOrHeight: 1200, // Reasonable size for web display
+            maxWidthOrHeight: 1200,
             useWebWorker: true,
             fileType: 'image/jpeg'
           };
@@ -54,7 +53,7 @@ export const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
              return await imageCompression(file, options);
           } catch (error) {
             console.error("Compression failed for file:", file.name, error);
-            return file; // Fallback to original if compression fails
+            return file;
           }
         });
 
@@ -75,7 +74,6 @@ export const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
     }
   };
 
-
   const handleRemoveNewImage = (index: number) => {
     const updatedImages = newImages.filter((_, i) => i !== index);
     setNewImages(updatedImages);
@@ -85,23 +83,22 @@ export const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
   };
 
   const error = form.formState.errors.image?.message as string | undefined;
+  const totalImages = existingImages.length + previewUrls.length;
 
   return (
-    <Box>
-      <Typography variant="subtitle2" gutterBottom>
-        Images
-      </Typography>
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+    <FormSection title="Images" icon={<ImageIcon fontSize="small" />}>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
         {existingImages.map((img) => (
           <Box
             key={img.public_id}
             sx={{
               position: 'relative',
-              width: 100,
-              height: 100,
+              width: 88,
+              height: 88,
               borderRadius: 2,
               overflow: 'hidden',
-              border: '1px solid #e0e0e0',
+              border: '1px solid',
+              borderColor: 'divider',
               '&:hover .delete-overlay': { opacity: 1 },
             }}
           >
@@ -115,7 +112,7 @@ export const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
               sx={{
                 position: 'absolute',
                 inset: 0,
-                bgcolor: 'rgba(0,0,0,0.5)',
+                bgcolor: (theme) => alpha(theme.palette.common.black, 0.5),
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -128,7 +125,7 @@ export const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
                 sx={{ color: 'white' }}
                 onClick={() => handleDeleteExisting(img.public_id)}
               >
-                <DeleteIcon />
+                <DeleteIcon fontSize="small" />
               </IconButton>
             </Box>
           </Box>
@@ -139,11 +136,12 @@ export const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
             key={url}
             sx={{
               position: 'relative',
-              width: 100,
-              height: 100,
+              width: 88,
+              height: 88,
               borderRadius: 2,
               overflow: 'hidden',
-              border: '1px solid #e0e0e0',
+              border: '1px solid',
+              borderColor: 'divider',
               '&:hover .delete-overlay': { opacity: 1 },
             }}
           >
@@ -157,7 +155,7 @@ export const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
               sx={{
                 position: 'absolute',
                 inset: 0,
-                bgcolor: 'rgba(0,0,0,0.5)',
+                bgcolor: (theme) => alpha(theme.palette.common.black, 0.5),
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -170,7 +168,7 @@ export const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
                 sx={{ color: 'white' }}
                 onClick={() => handleRemoveNewImage(index)}
               >
-                <DeleteIcon />
+                <DeleteIcon fontSize="small" />
               </IconButton>
             </Box>
           </Box>
@@ -179,25 +177,42 @@ export const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
         <Box
           onClick={() => !isCompressing && fileInputRef.current?.click()}
           sx={{
-            width: 100,
-            height: 100,
+            width: 88,
+            height: 88,
             borderRadius: 2,
-            border: '2px dashed #e0e0e0',
+            border: '2px dashed',
+            borderColor: 'divider',
             display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: isCompressing ? 'default' : 'pointer',
-            transition: 'border-color 0.2s',
-            '&:hover': { borderColor: 'primary.main', color: 'primary.main' },
+            transition: 'all 0.2s',
+            bgcolor: 'background.paper',
+            '&:hover': {
+              borderColor: 'primary.main',
+              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.05),
+            },
           }}
         >
           {isCompressing ? (
-             <CircularProgress size={24} />
+            <CircularProgress size={20} />
           ) : (
-             <AddIcon fontSize="large" color="action" />
+            <>
+              <AddPhotoAlternateIcon fontSize="small" color="action" />
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                Add
+              </Typography>
+            </>
           )}
         </Box>
       </Box>
+
+      {totalImages > 0 && (
+        <Typography variant="caption" color="text.secondary" sx={{ mt: 1.5, display: 'block' }}>
+          {totalImages} image{totalImages !== 1 ? 's' : ''} selected
+        </Typography>
+      )}
 
       <input
         type="file"
@@ -212,6 +227,6 @@ export const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
           {error}
         </Typography>
       )}
-    </Box>
+    </FormSection>
   );
 };

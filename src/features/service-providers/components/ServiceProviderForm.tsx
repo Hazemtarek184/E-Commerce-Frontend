@@ -16,6 +16,7 @@ import { OffersSection } from './form-sections/OffersSection';
 interface ServiceProviderFormBaseProps {
   isLoading?: boolean;
   defaultValues?: Partial<IServiceProvider>;
+  onCancel?: () => void;
 }
 
 interface CreateServiceProviderFormProps extends ServiceProviderFormBaseProps {
@@ -35,6 +36,7 @@ export const ServiceProviderForm: React.FC<ServiceProviderFormProps> = ({
   defaultValues,
   isEdit = false,
   isLoading = false,
+  onCancel,
 }) => {
   const [deletedImageIds, setDeletedImageIds] = useState<string[]>([]);
 
@@ -120,7 +122,12 @@ export const ServiceProviderForm: React.FC<ServiceProviderFormProps> = ({
       <LocationLinksSection form={form} />
       <OffersSection form={form} />
 
-      <Box display="flex" justifyContent="flex-end" gap={2} sx={{ mt: 2 }}>
+      <Box display="flex" justifyContent="flex-end" gap={2} sx={{ mt: 2, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+        {onCancel && (
+          <Button variant="outlined" onClick={onCancel} disabled={isLoading}>
+            Cancel
+          </Button>
+        )}
         <Button type="submit" variant="contained" disabled={isLoading}>
           {isLoading ? 'Saving...' : isEdit ? 'Update' : 'Create'}
         </Button>

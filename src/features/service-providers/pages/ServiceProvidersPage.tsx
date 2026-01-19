@@ -11,11 +11,8 @@ import {
   Select,
   MenuItem,
   Typography,
-  Paper,
-  alpha,
-  IconButton
+  IconButton,
 } from '@mui/material';
-import FilterListIcon from '@mui/icons-material/FilterList';
 import PeopleIcon from '@mui/icons-material/People';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
@@ -97,91 +94,83 @@ export const ServiceProvidersPage: React.FC<ServiceProvidersPageProps> = ({
     }
   };
 
-  const fetchError = error instanceof Error ? error.message : (error ? 'Failed to fetch service providers' : null);
+  const fetchError = error instanceof Error ? error.message : error ? 'Failed to fetch service providers' : null;
+  const selectedSubCategory = subCategories.find((sub) => sub._id === currentSubCategoryId);
 
   return (
-    <Box sx={{ width: '100%', minHeight: '100vh', px: 4, py: 2 }}>
-      <Box sx={{ width: '100%', maxWidth: '1600px', mx: 'auto' }}>
-        <PageHeader
-          title="Service Providers"
-          subtitle="Find and manage professional service providers"
-          actionButtonText="Add Provider"
-          onAction={() => setCreateModalOpen(true)}
-          icon={
-            <IconButton
-              onClick={onBack}
-              sx={{
-                color: 'white',
-                backgroundColor: 'rgba(255,255,255,0.2)',
-                '&:hover': {
-                  backgroundColor: 'rgba(255,255,255,0.3)',
-                },
-              }}
-            >
-              <ArrowBackIcon />
-            </IconButton>
-          }
-        />
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+      <PageHeader
+        title="Service Providers"
+        subtitle={selectedSubCategory ? `In ${selectedSubCategory.englishName}` : 'Manage service providers'}
+        icon={<PeopleIcon />}
+        actionButtonText="Add Provider"
+        onAction={() => setCreateModalOpen(true)}
+        backButton={
+          <IconButton onClick={onBack} sx={{ mr: 1 }}>
+            <ArrowBackIcon />
+          </IconButton>
+        }
+      />
 
+      <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1400, mx: 'auto' }}>
         <ErrorDisplay error={fetchError} />
 
-        {/* Filters Section */}
-        <Paper elevation={1} sx={{ p: 3, mb: 4, borderRadius: 3, backgroundColor: alpha('#f5f5f5', 0.5) }}>
-          <Box display="flex" flexDirection="column" gap={3}>
-            <Box display="flex" gap={2} alignItems="center">
-              <FilterListIcon color="action" />
-              <Typography variant="h6" fontWeight="600">Filters</Typography>
-            </Box>
-            <Box display="flex" gap={2} flexWrap="wrap">
-              <FormControl sx={{ minWidth: 200, flex: 1 }}>
-                <InputLabel>Category</InputLabel>
-                <Select
-                  value={currentCategoryId}
-                  label="Category"
-                  onChange={(e) => {
-                    setCurrentCategoryId(e.target.value);
-                    setCurrentSubCategoryId('');
-                  }}
-                  sx={{ backgroundColor: 'white' }}
-                >
-                  {categories.map((cat) => (
-                    <MenuItem key={cat._id} value={cat._id}>
-                      {cat.englishName}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormControl sx={{ minWidth: 200, flex: 1 }} disabled={!currentCategoryId}>
-                <InputLabel>Sub-Category</InputLabel>
-                <Select
-                  value={currentSubCategoryId}
-                  label="Sub-Category"
-                  onChange={(e) => setCurrentSubCategoryId(e.target.value)}
-                  sx={{ backgroundColor: 'white' }}
-                >
-                  {subCategories.map((sub) => (
-                    <MenuItem key={sub._id} value={sub._id}>
-                      {sub.englishName}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
-            <SearchBar
-              value={searchQuery}
-              onChange={setSearchQuery}
-              placeholder="Search providers by name or bio..."
-            />
-          </Box>
-        </Paper>
+        {/* Filters */}
+        <Box
+          sx={{
+            display: 'flex',
+            gap: 2,
+            mb: 4,
+            flexDirection: { xs: 'column', md: 'row' },
+            flexWrap: 'wrap',
+          }}
+        >
+          <SearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search providers..."
+          />
+          <FormControl sx={{ minWidth: 180 }}>
+            <InputLabel>Category</InputLabel>
+            <Select
+              value={currentCategoryId}
+              label="Category"
+              onChange={(e) => {
+                setCurrentCategoryId(e.target.value);
+                setCurrentSubCategoryId('');
+              }}
+              sx={{ bgcolor: 'background.paper' }}
+            >
+              {categories.map((cat) => (
+                <MenuItem key={cat._id} value={cat._id}>
+                  {cat.englishName}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl sx={{ minWidth: 180 }} disabled={!currentCategoryId}>
+            <InputLabel>Sub-Category</InputLabel>
+            <Select
+              value={currentSubCategoryId}
+              label="Sub-Category"
+              onChange={(e) => setCurrentSubCategoryId(e.target.value)}
+              sx={{ bgcolor: 'background.paper' }}
+            >
+              {subCategories.map((sub) => (
+                <MenuItem key={sub._id} value={sub._id}>
+                  {sub.englishName}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
 
+        {/* Results count */}
         {filteredProviders.length > 0 && (
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="h6" color="text.secondary">
-              {filteredProviders.length} provider{filteredProviders.length !== 1 ? 's' : ''} found
-              {searchQuery && ` for "${searchQuery}"`}
-            </Typography>
-          </Box>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            {filteredProviders.length} provider{filteredProviders.length !== 1 ? 's' : ''} found
+            {searchQuery && ` for "${searchQuery}"`}
+          </Typography>
         )}
 
         <DataStateDisplay
@@ -191,7 +180,7 @@ export const ServiceProvidersPage: React.FC<ServiceProvidersPageProps> = ({
           emptyTitle="No service providers found"
           emptyMessage={
             searchQuery
-              ? `No providers match your search for "${searchQuery}"`
+              ? `No providers match "${searchQuery}"`
               : 'Start by adding a service provider'
           }
           onClearSearch={searchQuery ? () => setSearchQuery('') : undefined}
@@ -202,44 +191,49 @@ export const ServiceProvidersPage: React.FC<ServiceProvidersPageProps> = ({
             onDelete={handleDeleteClick}
           />
         </DataStateDisplay>
-
-        <CreateServiceProviderModal
-          open={createModalOpen}
-          onClose={() => setCreateModalOpen(false)}
-          subCategoryId={currentSubCategoryId}
-          mainCategoryId={currentCategoryId}
-        />
-
-        {selectedProvider && (
-          <UpdateServiceProviderModal
-            open={updateModalOpen}
-            onClose={() => {
-              setUpdateModalOpen(false);
-              setSelectedProvider(null);
-            }}
-            serviceProvider={selectedProvider}
-            subCategoryId={currentSubCategoryId}
-          />
-        )}
-
-        <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-          <DialogTitle>Delete Service Provider</DialogTitle>
-          <DialogContent>
-            <Typography>Are you sure you want to delete this service provider? This action cannot be undone.</Typography>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-            <Button
-              onClick={handleDeleteConfirm}
-              color="error"
-              variant="contained"
-              disabled={deleteMutation.isPending}
-            >
-              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
-            </Button>
-          </DialogActions>
-        </Dialog>
       </Box>
+
+      <CreateServiceProviderModal
+        open={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        subCategoryId={currentSubCategoryId}
+        mainCategoryId={currentCategoryId}
+      />
+
+      {selectedProvider && (
+        <UpdateServiceProviderModal
+          open={updateModalOpen}
+          onClose={() => {
+            setUpdateModalOpen(false);
+            setSelectedProvider(null);
+          }}
+          serviceProvider={selectedProvider}
+          subCategoryId={currentSubCategoryId}
+        />
+      )}
+
+      {/* Delete Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+        <DialogTitle>Delete Service Provider</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete this provider? This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setDeleteDialogOpen(false)} variant="outlined">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDeleteConfirm}
+            color="error"
+            variant="contained"
+            disabled={deleteMutation.isPending}
+          >
+            {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

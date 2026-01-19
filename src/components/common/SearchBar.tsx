@@ -1,6 +1,7 @@
 import React from 'react';
-import { TextField, InputAdornment, alpha } from '@mui/material';
+import { TextField, InputAdornment, IconButton } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
 
 interface SearchBarProps {
   value: string;
@@ -8,29 +9,40 @@ interface SearchBarProps {
   placeholder?: string;
 }
 
-export const SearchBar: React.FC<SearchBarProps> = ({ value, onChange, placeholder = 'Search...' }) => {
+export const SearchBar: React.FC<SearchBarProps> = ({
+  value,
+  onChange,
+  placeholder = 'Search...',
+}) => {
   return (
     <TextField
       fullWidth
       placeholder={placeholder}
       value={value}
       onChange={(e) => onChange(e.target.value)}
+      size="medium"
       InputProps={{
         startAdornment: (
           <InputAdornment position="start">
-            <SearchIcon color="action" />
+            <SearchIcon sx={{ color: 'text.secondary' }} />
           </InputAdornment>
         ),
+        endAdornment: value ? (
+          <InputAdornment position="end">
+            <IconButton size="small" onClick={() => onChange('')} edge="end">
+              <ClearIcon fontSize="small" />
+            </IconButton>
+          </InputAdornment>
+        ) : null,
       }}
       sx={{
+        maxWidth: 400,
         '& .MuiOutlinedInput-root': {
-          borderRadius: 3,
-          backgroundColor: 'white', // Consistent white background
+          bgcolor: 'background.paper',
           '&:hover': {
-            backgroundColor: alpha('#f5f5f5', 0.8),
-          },
-          '&.Mui-focused': {
-            backgroundColor: 'white',
+            '& .MuiOutlinedInput-notchedOutline': {
+              borderColor: 'primary.main',
+            },
           },
         },
       }}

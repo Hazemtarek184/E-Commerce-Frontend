@@ -1,6 +1,8 @@
 import React from 'react';
-import { Box, Typography, Stack, Chip } from '@mui/material';
+import { Stack, Chip, Typography } from '@mui/material';
 import type { UseFormReturn } from 'react-hook-form';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import { FormSection } from './FormSection';
 
 const DAYS_OF_WEEK = [
   'Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday',
@@ -23,26 +25,29 @@ export const WorkingDaysSection: React.FC<WorkingDaysSectionProps> = ({ form }) 
   };
 
   return (
-    <Box>
-      <Typography variant="subtitle2" gutterBottom>
-        Working Days *
-      </Typography>
+    <FormSection title="Working Days" required icon={<CalendarMonthIcon fontSize="small" />}>
       <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
         {DAYS_OF_WEEK.map((day) => (
           <Chip
             key={day}
-            label={day}
+            label={day.slice(0, 3)}
             onClick={() => toggleDay(day)}
             color={workingDays.includes(day) ? 'primary' : 'default'}
             variant={workingDays.includes(day) ? 'filled' : 'outlined'}
+            size="medium"
+            sx={{
+              minWidth: 52,
+              fontWeight: 500,
+              transition: 'all 0.15s ease',
+            }}
           />
         ))}
       </Stack>
       {error && (
-        <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block' }}>
+        <Typography variant="caption" color="error" sx={{ mt: 1, display: 'block' }}>
           {error}
         </Typography>
       )}
-    </Box>
+    </FormSection>
   );
 };

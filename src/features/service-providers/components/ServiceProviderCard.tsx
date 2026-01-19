@@ -4,20 +4,19 @@ import {
   Box,
   Avatar,
   Typography,
-  Tooltip,
   IconButton,
   Chip,
   Stack,
   alpha,
-  Badge,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import StarIcon from "@mui/icons-material/Star";
+import VerifiedIcon from "@mui/icons-material/Verified";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import PhoneIcon from "@mui/icons-material/Phone";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
+import StarIcon from "@mui/icons-material/Star";
 import type { IServiceProvider } from "../../../interfaces";
 
 interface ServiceProviderCardProps {
@@ -31,13 +30,8 @@ const getInitials = (name: string) => {
     .split(" ")
     .map((n) => n[0])
     .join("")
-    .toUpperCase();
-};
-
-const getRatingColor = (rating: number) => {
-  if (rating >= 4.5) return "#4caf50";
-  if (rating >= 4.0) return "#ff9800";
-  return "#f44336";
+    .toUpperCase()
+    .slice(0, 2);
 };
 
 export const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({
@@ -45,324 +39,246 @@ export const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({
   onEdit,
   onDelete,
 }) => {
+  const hasImages = provider.imagesUrl && provider.imagesUrl.length > 0;
+
   return (
     <Card
-      elevation={2}
       sx={{
         height: "100%",
-        borderRadius: 3,
-        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-        cursor: "pointer",
-        position: "relative",
-        overflow: "visible",
+        transition: "all 0.2s ease",
         "&:hover": {
-          transform: "translateY(-8px)",
-          boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
-          "& .provider-actions": {
+          boxShadow: 4,
+          transform: "translateY(-2px)",
+          "& .action-buttons": {
             opacity: 1,
-            transform: "translateY(0)",
           },
         },
       }}
     >
-      <CardContent
-        sx={{ p: 3, height: "100%", display: "flex", flexDirection: "column" }}
-      >
-        <Box sx={{ width: "100%", mb: 2 }}>
-          {provider.imagesUrl && provider.imagesUrl.length > 0 ? (
-            <Box
+      {/* Image Section */}
+      {hasImages && (
+        <Box
+          sx={{
+            position: "relative",
+            height: 160,
+            overflow: "hidden",
+          }}
+        >
+          <img
+            src={provider.imagesUrl![0].url}
+            alt={provider.name}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+            }}
+          />
+          {provider.isVerified && (
+            <Chip
+              icon={<VerifiedIcon sx={{ fontSize: 14 }} />}
+              label="Verified"
+              size="small"
               sx={{
-                display: "flex",
-                gap: 1,
-                overflowX: "auto",
-                pb: 1,
-                "&::-webkit-scrollbar": {
-                  height: 6,
-                },
-                "&::-webkit-scrollbar-track": {
-                  backgroundColor: alpha("#000", 0.05),
-                  borderRadius: 3,
-                },
-                "&::-webkit-scrollbar-thumb": {
-                  backgroundColor: alpha("#000", 0.2),
-                  borderRadius: 3,
-                  "&:hover": {
-                    backgroundColor: alpha("#000", 0.3),
-                  },
-                },
+                position: "absolute",
+                top: 12,
+                left: 12,
+                bgcolor: "white",
+                color: "success.main",
+                fontWeight: 500,
+                "& .MuiChip-icon": { color: "success.main" },
+              }}
+            />
+          )}
+          {/* Action buttons on image */}
+          <Box
+            className="action-buttons"
+            sx={{
+              position: "absolute",
+              top: 12,
+              right: 12,
+              display: "flex",
+              gap: 0.5,
+              opacity: 0,
+              transition: "opacity 0.2s",
+            }}
+          >
+            <IconButton
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(provider);
+              }}
+              sx={{
+                bgcolor: "white",
+                "&:hover": { bgcolor: "primary.main", color: "white" },
               }}
             >
-              {provider.imagesUrl.map((img, index) => (
-                <Box
-                  key={img.public_id || index}
-                  sx={{
-                    flexShrink: 0,
-                    width: 120,
-                    height: 120,
-                    borderRadius: 2,
-                    overflow: "hidden",
-                    position: "relative",
-                  }}
-                >
-                  <img
-                    src={img.url}
-                    alt={`${provider.name} - ${index + 1}`}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    }}
-                  />
-                  {index === 0 && provider.isVerified && (
-                    <Box
-                      sx={{
-                        position: "absolute",
-                        top: 4,
-                        right: 4,
-                        width: 20,
-                        height: 20,
-                        borderRadius: "50%",
-                        backgroundColor: "#4caf50",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        border: "2px solid white",
-                        boxShadow: 1,
-                      }}
-                    >
-                      <Typography sx={{ fontSize: 12, color: "white" }}>
-                        ✓
-                      </Typography>
-                    </Box>
-                  )}
-                </Box>
-              ))}
-            </Box>
-          ) : (
-            <Box display="flex" alignItems="center" gap={2}>
-              <Badge
-                overlap="circular"
-                anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-                badgeContent={
-                  provider.isVerified ? (
-                    <Box
-                      sx={{
-                        width: 16,
-                        height: 16,
-                        borderRadius: "50%",
-                        backgroundColor: "#4caf50",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        border: "2px solid white",
-                      }}
-                    >
-                      <Typography sx={{ fontSize: 10, color: "white" }}>
-                        ✓
-                      </Typography>
-                    </Box>
-                  ) : null
-                }
-              >
-                <Avatar
-                  sx={{
-                    width: 56,
-                    height: 56,
-                    backgroundColor: "primary.main",
-                    fontSize: "1.2rem",
-                    fontWeight: "bold",
-                  }}
-                >
-                  {getInitials(provider.name || "")}
-                </Avatar>
-              </Badge>
-            </Box>
-          )}
-
-          <Box sx={{ mt: 2 }}>
-            <Box display="flex" alignItems="center" gap={1} mb={1}>
-              <Typography variant="h6" fontWeight="700" noWrap>
-                {provider.name || "Unnamed Provider"}
-              </Typography>
-              {provider.isVerified && (
-                <Tooltip title="Verified Provider">
-                  <Box sx={{ color: "#4caf50", display: "flex" }}>
-                    <StarIcon fontSize="small" />
-                  </Box>
-                </Tooltip>
-              )}
-            </Box>
-            {provider.rating !== undefined && (
-              <Box display="flex" alignItems="center" gap={0.5}>
-                <StarIcon
-                  sx={{ fontSize: 16, color: getRatingColor(provider.rating) }}
-                />
-                <Typography
-                  variant="body2"
-                  fontWeight="600"
-                  color={getRatingColor(provider.rating)}
-                >
-                  {provider.rating.toFixed(1)}
-                </Typography>
-              </Box>
-            )}
+              <EditIcon fontSize="small" />
+            </IconButton>
+            <IconButton
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(provider._id || "");
+              }}
+              sx={{
+                bgcolor: "white",
+                "&:hover": { bgcolor: "error.main", color: "white" },
+              }}
+            >
+              <DeleteIcon fontSize="small" />
+            </IconButton>
           </Box>
         </Box>
+      )}
 
+      <CardContent sx={{ p: 2.5 }}>
+        {/* Header without image */}
+        {!hasImages && (
+          <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+            <Avatar
+              sx={{
+                width: 48,
+                height: 48,
+                bgcolor: "primary.main",
+                fontSize: "1rem",
+              }}
+            >
+              {getInitials(provider.name || "")}
+            </Avatar>
+            <Box
+              className="action-buttons"
+              sx={{
+                display: "flex",
+                gap: 0.5,
+                opacity: 0,
+                transition: "opacity 0.2s",
+              }}
+            >
+              <IconButton
+                size="small"
+                onClick={() => onEdit(provider)}
+                sx={{
+                  border: "1px solid",
+                  borderColor: "divider",
+                  "&:hover": { bgcolor: "primary.main", color: "white" },
+                }}
+              >
+                <EditIcon fontSize="small" />
+              </IconButton>
+              <IconButton
+                size="small"
+                onClick={() => onDelete(provider._id || "")}
+                sx={{
+                  border: "1px solid",
+                  borderColor: "divider",
+                  "&:hover": { bgcolor: "error.main", color: "white" },
+                }}
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Box>
+          </Box>
+        )}
+
+        {/* Name and Rating */}
+        <Box display="flex" alignItems="center" gap={1} mb={0.5}>
+          <Typography variant="subtitle1" fontWeight="600" noWrap sx={{ flex: 1 }}>
+            {provider.name || "Unnamed Provider"}
+          </Typography>
+          {provider.isVerified && !hasImages && (
+            <VerifiedIcon sx={{ fontSize: 18, color: "success.main" }} />
+          )}
+        </Box>
+
+        {provider.rating !== undefined && (
+          <Box display="flex" alignItems="center" gap={0.5} mb={1.5}>
+            <StarIcon sx={{ fontSize: 16, color: "warning.main" }} />
+            <Typography variant="body2" fontWeight="500">
+              {provider.rating.toFixed(1)}
+            </Typography>
+            {provider.completedJobs !== undefined && (
+              <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                ({provider.completedJobs} jobs)
+              </Typography>
+            )}
+          </Box>
+        )}
+
+        {/* Bio */}
         <Typography
           variant="body2"
           color="text.secondary"
           sx={{
-            mb: 3,
-            lineHeight: 1.6,
+            mb: 2,
             display: "-webkit-box",
-            WebkitLineClamp: 3,
+            WebkitLineClamp: 2,
             WebkitBoxOrient: "vertical",
             overflow: "hidden",
+            lineHeight: 1.5,
           }}
         >
-          {provider.bio || "No bio provided"}
+          {provider.bio || "No description available"}
         </Typography>
 
-        <Stack spacing={2} sx={{ flex: 1 }}>
+        {/* Details */}
+        <Stack spacing={1.5}>
+          {/* Working Days */}
           {provider.workingDays && provider.workingDays.length > 0 && (
-            <Box>
-              <Box display="flex" alignItems="center" gap={1} mb={1}>
-                <ScheduleIcon fontSize="small" color="action" />
-                <Typography variant="body2" fontWeight="500">
-                  Available Days
-                </Typography>
-              </Box>
-              <Box display="flex" flexWrap="wrap" gap={0.5}>
-                {provider.workingDays.slice(0, 3).map((day: string) => (
+            <Box display="flex" alignItems="center" gap={1}>
+              <ScheduleIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+              <Box display="flex" gap={0.5} flexWrap="wrap">
+                {provider.workingDays.slice(0, 4).map((day: string) => (
                   <Chip
                     key={day}
                     label={day.slice(0, 3)}
                     size="small"
-                    variant="outlined"
-                    sx={{ fontSize: "0.7rem", height: 20 }}
+                    sx={{
+                      height: 22,
+                      fontSize: "0.7rem",
+                      bgcolor: alpha("#6366f1", 0.1),
+                      color: "primary.main",
+                    }}
                   />
                 ))}
-                {provider.workingDays.length > 3 && (
+                {provider.workingDays.length > 4 && (
                   <Chip
-                    label={`+${provider.workingDays.length - 3}`}
+                    label={`+${provider.workingDays.length - 4}`}
                     size="small"
-                    variant="outlined"
-                    sx={{ fontSize: "0.7rem", height: 20 }}
+                    sx={{
+                      height: 22,
+                      fontSize: "0.7rem",
+                    }}
                   />
                 )}
               </Box>
             </Box>
           )}
 
+          {/* Contact */}
           {provider.phoneContacts && provider.phoneContacts.length > 0 && (
-            <Box>
-              <Box display="flex" alignItems="center" gap={1} mb={1}>
-                <PhoneIcon fontSize="small" color="action" />
-                <Typography variant="body2" fontWeight="500">
-                  Contact
-                </Typography>
-              </Box>
-              <Box display="flex" flexWrap="wrap" gap={1}>
-                {provider.phoneContacts
-                  .slice(0, 2)
-                  .map((contact: any, idx: number) => (
-                    <Chip
-                      key={idx}
-                      label={contact.phoneNumber}
-                      size="small"
-                      icon={
-                        contact.hasWhatsApp ? (
-                          <WhatsAppIcon sx={{ fontSize: 14 }} />
-                        ) : (
-                          <PhoneIcon sx={{ fontSize: 14 }} />
-                        )
-                      }
-                      sx={{
-                        fontSize: "0.7rem",
-                        backgroundColor: contact.hasWhatsApp
-                          ? alpha("#25d366", 0.1)
-                          : alpha("#2196f3", 0.1),
-                        color: contact.hasWhatsApp ? "#25d366" : "#2196f3",
-                        "& .MuiChip-icon": {
-                          color: "inherit",
-                        },
-                      }}
-                    />
-                  ))}
-              </Box>
+            <Box display="flex" alignItems="center" gap={1}>
+              {provider.phoneContacts[0].hasWhatsApp ? (
+                <WhatsAppIcon sx={{ fontSize: 16, color: "#25d366" }} />
+              ) : (
+                <PhoneIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+              )}
+              <Typography variant="body2" color="text.secondary">
+                {provider.phoneContacts[0].phoneNumber}
+              </Typography>
             </Box>
           )}
 
+          {/* Location */}
           {provider.locationLinks && provider.locationLinks.length > 0 && (
-            <Box>
-              <Box display="flex" alignItems="center" gap={1} mb={1}>
-                <LocationOnIcon fontSize="small" color="action" />
-                <Typography variant="body2" fontWeight="500">
-                  Service Areas
-                </Typography>
-              </Box>
-              <Box display="flex" flexWrap="wrap" gap={0.5}>
-                {provider.locationLinks.map((location: string, idx: number) => (
-                  <Chip
-                    key={idx}
-                    label={location}
-                    size="small"
-                    variant="outlined"
-                    sx={{ fontSize: "0.7rem", height: 20 }}
-                  />
-                ))}
-              </Box>
+            <Box display="flex" alignItems="center" gap={1}>
+              <LocationOnIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+              <Typography variant="body2" color="text.secondary" noWrap>
+                {provider.locationLinks[0]}
+              </Typography>
             </Box>
           )}
         </Stack>
-
-        <Box
-          className="provider-actions"
-          sx={{
-            position: "absolute",
-            top: 16,
-            right: 16,
-            display: "flex",
-            gap: 1,
-            opacity: 0,
-            transform: "translateY(-10px)",
-            transition: "all 0.3s ease",
-          }}
-        >
-          <Tooltip title="Edit Provider">
-            <IconButton
-              size="small"
-              sx={{
-                backgroundColor: "white",
-                boxShadow: 2,
-                "&:hover": {
-                  backgroundColor: "primary.light",
-                  color: "white",
-                },
-              }}
-              onClick={() => onEdit(provider)}
-            >
-              <EditIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Delete Provider">
-            <IconButton
-              size="small"
-              sx={{
-                backgroundColor: "white",
-                boxShadow: 2,
-                "&:hover": {
-                  backgroundColor: "error.light",
-                  color: "white",
-                },
-              }}
-              onClick={() => onDelete(provider._id || "")}
-            >
-              <DeleteIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </Box>
       </CardContent>
     </Card>
   );

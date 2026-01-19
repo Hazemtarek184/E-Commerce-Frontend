@@ -1,4 +1,19 @@
-import { Dialog, DialogTitle, DialogContent, FormControl, InputLabel, Select, MenuItem, Box } from '@mui/material';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Box,
+  IconButton,
+  Typography,
+  Stack,
+  alpha,
+} from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import AddBusinessIcon from '@mui/icons-material/AddBusiness';
 import { useState } from 'react';
 import { ServiceProviderForm } from './ServiceProviderForm';
 import { useCreateServiceProvider } from '../mutations';
@@ -39,18 +54,74 @@ export const CreateServiceProviderModal: React.FC<CreateServiceProviderModalProp
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>Create Service Provider</DialogTitle>
-      <DialogContent>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      PaperProps={{
+        sx: { maxHeight: '90vh' }
+      }}
+    >
+      <DialogTitle
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          pb: 2,
+        }}
+      >
+        <Stack direction="row" alignItems="center" spacing={1.5}>
+          <Box
+            sx={{
+              width: 40,
+              height: 40,
+              borderRadius: 2,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+              color: 'primary.main',
+            }}
+          >
+            <AddBusinessIcon />
+          </Box>
+          <Box>
+            <Typography variant="h6" component="span" fontWeight={600}>
+              Add Service Provider
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Create a new service provider listing
+            </Typography>
+          </Box>
+        </Stack>
+        <IconButton
+          onClick={onClose}
+          size="small"
+          sx={{
+            color: 'text.secondary',
+            '&:hover': {
+              bgcolor: (theme) => alpha(theme.palette.error.main, 0.1),
+              color: 'error.main',
+            },
+          }}
+        >
+          <CloseIcon fontSize="small" />
+        </IconButton>
+      </DialogTitle>
+
+      <DialogContent sx={{ pt: 3, mt: 1 }}>
         <Box sx={{ display: 'flex', gap: 2, mb: 3, mt: 1 }}>
-          <FormControl fullWidth>
+          <FormControl fullWidth size="small">
             <InputLabel>Category</InputLabel>
             <Select
               value={selectedCategoryId}
               label="Category"
               onChange={(e) => {
                 setSelectedCategoryId(e.target.value);
-                setSelectedSubCategoryId(''); // Reset subcategory when category changes
+                setSelectedSubCategoryId('');
               }}
             >
               {categories.map((cat) => (
@@ -61,7 +132,7 @@ export const CreateServiceProviderModal: React.FC<CreateServiceProviderModalProp
             </Select>
           </FormControl>
 
-          <FormControl fullWidth disabled={!selectedCategoryId || subCategoriesLoading}>
+          <FormControl fullWidth size="small" disabled={!selectedCategoryId || subCategoriesLoading}>
             <InputLabel>Sub-Category</InputLabel>
             <Select
               value={selectedSubCategoryId}
@@ -81,6 +152,7 @@ export const CreateServiceProviderModal: React.FC<CreateServiceProviderModalProp
           onSubmit={handleSubmit}
           isEdit={false}
           isLoading={createMutation.isPending}
+          onCancel={onClose}
         />
       </DialogContent>
     </Dialog>

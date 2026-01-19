@@ -1,14 +1,24 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getSubCategories, createSubCategory, updateSubCategory, deleteSubCategory } from '../api';
+import {
+  getSubCategories,
+  createSubCategory,
+  updateSubCategory,
+  deleteSubCategory,
+} from '../api';
+import { QUERY_KEYS } from '../config/constants';
+import type { ISubCategory } from '../interfaces';
 
 export const useSubCategories = (mainCategoryId?: string) => {
   return useQuery({
-    queryKey: ['subCategories', mainCategoryId],
-    queryFn: async () => {
+    queryKey: QUERY_KEYS.SUB_CATEGORIES(mainCategoryId || ''),
+    queryFn: async (): Promise<ISubCategory[]> => {
       if (!mainCategoryId) return [];
-      const res = await getSubCategories(mainCategoryId);
-      // Handle the nested structure from API response
-      return res.data?.data?.subCategories || [];
+      const result = await getSubCategories(mainCategoryId);
+      // result is IApiResponse<{ subCategories: ISubCategory[] }>
+      if (result.success && result.data) {
+        return result.data.subCategories;
+      }
+      return [];
     },
     enabled: !!mainCategoryId,
   });
@@ -21,7 +31,8 @@ export const useSubCategoryMutations = () => {
     mutationFn: ({ categoryId, data }: { categoryId: string; data: { englishName: string; arabicName: string } }) =>
       createSubCategory(categoryId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['subCategories'] }); // Invalidate all subcategories
+      // Invalidate all sub-categories queries
+      queryClient.invalidateQueries({ queryKey: ['sub-categories'] });
     },
   });
 
@@ -29,14 +40,14 @@ export const useSubCategoryMutations = () => {
     mutationFn: ({ id, data }: { id: string; data: { englishName: string; arabicName: string } }) =>
       updateSubCategory(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['subCategories'] });
+      queryClient.invalidateQueries({ queryKey: ['sub-categories'] });
     },
   });
 
   const remove = useMutation({
     mutationFn: deleteSubCategory,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['subCategories'] });
+      queryClient.invalidateQueries({ queryKey: ['sub-categories'] });
     },
   });
 
